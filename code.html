@@ -1,0 +1,4282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bright &amp; Cozy Farming</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           CSS RESET
+           ============================================================ */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        /* ============================================================
+           ROOT VARIABLES
+           ============================================================ */
+        :root {
+            --space-xs: 8px;
+            --space-sm: 16px;
+            --space-md: 24px;
+            --space-lg: 32px;
+            --space-xl: 48px;
+            --transition-fast: 150ms;
+            --transition-normal: 300ms;
+            --transition-slow: 500ms;
+            --ease-out: cubic-bezier(0.0, 0, 0.2, 1);
+            --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-spring: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --color-cream: #FFF8E7;
+            --color-beige: #E8DCC4;
+            --color-brown-dark: #6B5344;
+            --color-brown-mid: #8B6F47;
+            --color-green-accent: #7FB069;
+            --color-green-hover: #6FA055;
+            --color-gold: #F2A65A;
+            --color-gold-light: #FFD699;
+            --color-shadow: rgba(107, 83, 68, 0.25);
+            --color-glass: rgba(255, 248, 231, 0.75);
+            --color-glass-strong: rgba(255, 248, 231, 0.92);
+        }
+        /* ============================================================
+           BASE STYLES
+           ============================================================ */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: none;
+            -ms-touch-action: none;
+            font-family: 'Poppins', sans-serif;
+            background: #87CEEB;
+        }
+        /* ============================================================
+           GAME CONTAINER
+           ============================================================ */
+        #game-world {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #87CEEB;
+            transition: background-color 2s ease;
+        }
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 0;
+        }
+        /* ============================================================
+           MAIN MENU — wooden cabin interior
+           ============================================================ */
+        .start-screen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 100;
+            overflow: hidden;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            font-family: 'Poppins', sans-serif;
+            pointer-events: auto;
+            background:
+                radial-gradient(ellipse at 50% 20%, rgba(255, 221, 154, 0.28) 0%, rgba(255, 221, 154, 0) 46%),
+                linear-gradient(180deg, #8B603D 0%, #65432C 58%, #4C3323 100%);
+        }
+        .start-screen::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            background:
+                linear-gradient(180deg, rgba(255, 248, 231, 0.08) 0%, transparent 32%),
+                radial-gradient(ellipse at 50% 52%, transparent 0%, transparent 48%, rgba(35, 22, 14, 0.32) 100%);
+        }
+        .start-screen.hiding {
+            opacity: 0;
+            transform: scale(1.02);
+            pointer-events: none;
+        }
+        .start-screen.hidden {
+            display: none;
+        }
+        /* Wood plank walls */
+        .cabin-back-wall {
+            position: absolute;
+            inset: 0 0 22% 0;
+            pointer-events: none;
+            background:
+                linear-gradient(90deg, rgba(255, 245, 214, 0.08), transparent 18%, transparent 82%, rgba(40, 24, 15, 0.16)),
+                repeating-linear-gradient(
+                    180deg,
+                    #755239 0px,
+                    #83603F 15px,
+                    #68452F 29px,
+                    #76523A 44px
+                );
+            box-shadow: inset 0 -52px 88px rgba(0, 0, 0, 0.2);
+        }
+        .cabin-back-wall::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 220, 160, 0.12) 0%, transparent 45%);
+            pointer-events: none;
+        }
+        .cabin-floor {
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            height: 25%;
+            pointer-events: none;
+            background:
+                linear-gradient(180deg, rgba(255, 226, 172, 0.12), rgba(0, 0, 0, 0.08)),
+                repeating-linear-gradient(
+                    90deg,
+                    #67452E 0px,
+                    #77533A 46px,
+                    #573923 92px,
+                    #704D34 138px
+                );
+            box-shadow: inset 0 10px 28px rgba(0, 0, 0, 0.24);
+        }
+        .cabin-floor::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.15), transparent);
+        }
+        /* Sunbeams through window */
+        .sunbeam {
+            position: absolute;
+            top: 8%;
+            width: 120px;
+            height: 75%;
+            background: linear-gradient(180deg,
+                rgba(255, 235, 180, 0.35) 0%,
+                rgba(255, 220, 150, 0.12) 55%,
+                transparent 100%);
+            filter: blur(8px);
+            pointer-events: none;
+            animation: sunbeamPulse 6s ease-in-out infinite;
+        }
+        .sunbeam--left {
+            left: 32%;
+            transform: skewX(-8deg);
+            animation-delay: 0s;
+        }
+        .sunbeam--right {
+            left: 52%;
+            transform: skewX(6deg);
+            animation-delay: 1.5s;
+        }
+        @keyframes sunbeamPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.85; }
+        }
+        #menu-particles {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+        }
+        /* Corner icon buttons */
+        .menu-corner-btn {
+            position: absolute;
+            z-index: 20;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 248, 231, 0.6);
+            background: linear-gradient(145deg, #FFF8E7 0%, #E8DCC4 100%);
+            box-shadow: 0 4px 16px rgba(60, 40, 25, 0.3);
+            cursor: pointer;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform var(--transition-fast) var(--ease-out),
+                        box-shadow var(--transition-fast);
+        }
+        .menu-corner-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(60, 40, 25, 0.35);
+        }
+        .menu-corner-btn:active {
+            transform: scale(0.96);
+        }
+        .menu-corner-btn--tl { top: 20px; left: 20px; }
+        .menu-corner-btn--tr { top: 20px; right: 20px; }
+        /* Center stack: window + title + buttons */
+        .menu-center {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -52%);
+            z-index: 50;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: min(420px, 88vw);
+            max-height: calc(100% - 112px);
+        }
+        .menu-window {
+            width: min(280px, 70vw);
+            aspect-ratio: 1;
+            margin-bottom: -28px;
+            z-index: 1;
+        }
+        .menu-window-frame {
+            width: 100%;
+            height: 100%;
+            padding: 14px;
+            background: linear-gradient(145deg, #5C3E28 0%, #4A3220 100%);
+            border-radius: 8px;
+            box-shadow:
+                inset 0 2px 4px rgba(255, 255, 255, 0.1),
+                0 8px 24px rgba(0, 0, 0, 0.35);
+        }
+        .menu-window-view {
+            width: 100%;
+            height: 100%;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(180deg, #B8D4E8 0%, #A8CCE0 40%, #8B9D83 100%);
+        }
+        .menu-window-hills {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 45%;
+            background: linear-gradient(180deg, #7BA05A 0%, #6B8E5A 100%);
+            border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+        }
+        .menu-window-hill-2 {
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 32%;
+            background: #5E8048;
+            border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+            opacity: 0.7;
+        }
+        .menu-window-tree {
+            position: absolute;
+            bottom: 28%;
+            width: 36px;
+            height: 48px;
+            background: #4A7A3A;
+            border-radius: 50% 50% 40% 40%;
+            box-shadow: -20px 0 0 -4px #5A9048, 20px 0 0 -4px #5A9048;
+        }
+        .menu-window-tree--l { left: 18%; }
+        .menu-window-tree--r { right: 18%; width: 28px; height: 40px; }
+        .menu-window-sun {
+            position: absolute;
+            top: 12%;
+            right: 18%;
+            width: 36px;
+            height: 36px;
+            background: radial-gradient(circle, #FFE9A8 0%, #F2C46D 70%, transparent 71%);
+            border-radius: 50%;
+            opacity: 0.9;
+        }
+        .menu-title-wrap {
+            text-align: center;
+            margin-bottom: 28px;
+            z-index: 2;
+            animation: titleFloat 4s ease-in-out infinite;
+        }
+        .menu-title-line1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(28px, 6vw, 42px);
+            font-weight: 600;
+            color: #FFF8E7;
+            text-shadow:
+                0 2px 0 #6B5344,
+                0 4px 12px rgba(0, 0, 0, 0.25);
+            letter-spacing: 1px;
+            line-height: 1.1;
+        }
+        .menu-title-line2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(44px, 10vw, 72px);
+            font-weight: 700;
+            color: #FFD699;
+            text-shadow:
+                0 4px 0 #A67C52,
+                0 6px 0 #6B5344,
+                0 8px 24px rgba(0, 0, 0, 0.3);
+            line-height: 1;
+            margin-top: 2px;
+        }
+        .menu-title-sparkle {
+            font-size: 0.45em;
+            vertical-align: super;
+            opacity: 0.9;
+        }
+        .menu-subtitle {
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 248, 231, 0.75);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+        @keyframes titleFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            max-width: 320px;
+            z-index: 2;
+        }
+        .menu-btn {
+            width: 100%;
+            height: 64px;
+            border-radius: 32px;
+            border: 3px solid rgba(107, 83, 68, 0.2);
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(20px, 4.5vw, 26px);
+            font-weight: 600;
+            color: #FFF8E7;
+            cursor: pointer;
+            pointer-events: auto;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            transition: transform var(--transition-fast) var(--ease-out),
+                        box-shadow var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+        }
+        .menu-btn--primary {
+            background: linear-gradient(180deg, #FFF4D6 0%, #F5E6C4 50%, #E8D4B0 100%);
+            color: #6B5344;
+            box-shadow:
+                0 5px 0 #C4B08A,
+                0 8px 20px rgba(60, 40, 25, 0.25);
+        }
+        .menu-btn--primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #C4B08A, 0 12px 28px rgba(60, 40, 25, 0.3);
+        }
+        .menu-btn--primary:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #C4B08A, 0 4px 12px rgba(60, 40, 25, 0.2);
+        }
+        .menu-btn--continue {
+            background: linear-gradient(180deg, #9BC88A 0%, #7FB069 50%, #6FA055 100%);
+            border-color: rgba(80, 120, 60, 0.35);
+            box-shadow:
+                0 5px 0 #5E9049,
+                0 8px 20px rgba(60, 90, 50, 0.3);
+        }
+        .menu-btn--continue:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #5E9049, 0 12px 28px rgba(60, 90, 50, 0.35);
+        }
+        .menu-btn--continue:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #5E9049;
+        }
+        .menu-btn--continue:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .menu-btn--settings {
+            background: linear-gradient(180deg, #E8DCC4 0%, #D4C4A8 100%);
+            color: #6B5344;
+            box-shadow: 0 4px 0 #B8A888, 0 6px 16px rgba(60, 40, 25, 0.2);
+        }
+        .menu-btn--settings:hover {
+            transform: translateY(-2px);
+        }
+        /* Flower pots */
+        .menu-pot {
+            position: absolute;
+            bottom: 8%;
+            z-index: 5;
+            pointer-events: none;
+        }
+        .menu-pot--left { left: 6%; }
+        .menu-pot--right { right: 6%; }
+        .menu-pot-vase {
+            width: 72px;
+            height: 56px;
+            background: linear-gradient(145deg, #8B6340 0%, #6B4A32 100%);
+            border-radius: 8px 8px 12px 12px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+            margin: 0 auto;
+        }
+        .menu-pot-vase::before {
+            content: '';
+            display: block;
+            width: 88px;
+            height: 14px;
+            margin: -6px 0 0 -8px;
+            background: #5C3E28;
+            border-radius: 4px;
+        }
+        .menu-pot-flowers {
+            position: relative;
+            top: -52px;
+            height: 64px;
+            font-size: 28px;
+            text-align: center;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+            animation: flowerSway 5s ease-in-out infinite;
+        }
+        .menu-pot--right .menu-pot-flowers {
+            animation-delay: 1.2s;
+        }
+        @keyframes flowerSway {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
+        }
+        /* Menu toast & settings panel */
+        .menu-toast {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-12px);
+            background: rgba(255, 248, 231, 0.95);
+            color: #6B5344;
+            padding: 12px 22px;
+            border-radius: 16px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            z-index: 30;
+            max-width: 90%;
+            text-align: center;
+        }
+        .menu-toast.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .menu-settings-panel {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            background: rgba(40, 28, 18, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-normal) var(--ease-out);
+        }
+        .menu-settings-panel.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .menu-settings-card {
+            width: min(360px, 90vw);
+            background: linear-gradient(145deg, #FFF8E7 0%, #E8DCC4 100%);
+            border-radius: 24px;
+            padding: var(--space-md);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
+            border: 3px solid rgba(255, 248, 231, 0.8);
+        }
+        .menu-settings-card h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 26px;
+            color: #6B5344;
+            text-align: center;
+            margin-bottom: var(--space-md);
+        }
+        .menu-setting-row {
+            margin-bottom: 18px;
+        }
+        .menu-setting-row label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+            font-weight: 600;
+            color: #6B5344;
+            margin-bottom: 8px;
+        }
+        .menu-setting-row input[type="range"] {
+            width: 100%;
+            height: 8px;
+            accent-color: #7FB069;
+        }
+        .menu-settings-close {
+            width: 100%;
+            height: 52px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #7FB069, #6FA055);
+            color: white;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #5E9049;
+        }
+        .menu-settings-close:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #5E9049;
+        }
+        /* ============================================================
+           UI OVERLAY
+           ============================================================ */
+        .ui-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .ui-overlay > * {
+            pointer-events: auto;
+        }
+        /* ============================================================
+           TOP BAR
+           ============================================================ */
+        .top-bar {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-sm) var(--space-md);
+        }
+        .time-indicator {
+            background: var(--color-glass-strong);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-brown-dark);
+            box-shadow: 0 4px 16px var(--color-shadow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all var(--transition-normal) var(--ease-out);
+            border: 2px solid rgba(255, 248, 231, 0.5);
+        }
+        .time-icon {
+            font-size: 22px;
+            line-height: 1;
+        }
+        .harvest-counter {
+            background: var(--color-glass-strong);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-brown-dark);
+            box-shadow: 0 4px 16px var(--color-shadow);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 2px solid rgba(255, 248, 231, 0.5);
+        }
+        .top-right-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .game-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .game-action-btn {
+            width: 46px;
+            height: 46px;
+            border: 2px solid rgba(255, 248, 231, 0.55);
+            border-radius: 14px;
+            background: var(--color-glass-strong);
+            color: var(--color-brown-dark);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px var(--color-shadow);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: transform var(--transition-fast) var(--ease-out),
+                        box-shadow var(--transition-fast);
+        }
+        .game-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px var(--color-shadow);
+        }
+        .save-status {
+            min-width: 84px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-brown-mid);
+            text-align: right;
+            text-shadow: 0 1px 0 rgba(255, 248, 231, 0.7);
+        }
+        /* ============================================================
+           GAMEPLAY HUD — top bar + hotbar
+           ============================================================ */
+        .day-pill {
+            background: var(--color-glass-strong);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 8px 18px 8px 10px;
+            border-radius: 999px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-brown-dark);
+            box-shadow: 0 4px 16px var(--color-shadow);
+            border: 2px solid rgba(255, 248, 231, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .day-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #B8D4E8, #87CEEB);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 2px solid rgba(255, 248, 231, 0.8);
+        }
+        .day-coins {
+            padding-left: 10px;
+            margin-left: 4px;
+            border-left: 2px solid rgba(107, 83, 68, 0.15);
+            color: #8B6F47;
+        }
+        .hotbar-wrap {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 12;
+            pointer-events: auto;
+            max-width: calc(100vw - 32px);
+        }
+        .hotbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: linear-gradient(180deg, rgba(255, 248, 231, 0.96) 0%, rgba(232, 220, 196, 0.96) 100%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 3px solid rgba(255, 248, 231, 0.9);
+            border-radius: 28px;
+            box-shadow:
+                0 8px 32px rgba(60, 40, 25, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            max-width: 100%;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scrollbar-width: none;
+        }
+        .hotbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hotbar-slot {
+            flex: 0 0 auto;
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            border: 3px solid rgba(107, 83, 68, 0.12);
+            background: rgba(255, 255, 255, 0.85);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: transform var(--transition-fast) var(--ease-out),
+                        border-color var(--transition-fast),
+                        box-shadow var(--transition-fast);
+            font-size: 32px;
+            line-height: 1;
+        }
+        .hotbar-slot:hover {
+            transform: translateY(-4px);
+            border-color: var(--color-green-accent);
+            box-shadow: 0 6px 16px rgba(127, 176, 105, 0.35);
+        }
+        .hotbar-slot.selected {
+            border-color: var(--color-gold);
+            background: rgba(255, 248, 231, 1);
+            box-shadow: 0 0 0 3px rgba(242, 166, 90, 0.35);
+            transform: translateY(-6px);
+        }
+        .hotbar-slot.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .hotbar-slot-label {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--color-brown-mid);
+            margin-top: 2px;
+            text-transform: capitalize;
+        }
+        .hotbar-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 11px;
+            background: linear-gradient(135deg, var(--color-gold), var(--color-gold-light));
+            color: white;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        .hotbar-divider {
+            width: 2px;
+            height: 48px;
+            background: rgba(107, 83, 68, 0.12);
+            border-radius: 1px;
+            margin: 0 4px;
+        }
+        .hotbar-corner-btn {
+            position: absolute;
+            bottom: 28px;
+            z-index: 12;
+            pointer-events: auto;
+        }
+        .hotbar-corner-btn--left {
+            left: var(--space-md);
+        }
+        .hotbar-corner-btn--right {
+            right: var(--space-md);
+        }
+        /* ============================================================
+           ICON BUTTONS
+           ============================================================ */
+        .icon-button {
+            width: 64px;
+            height: 64px;
+            background: var(--color-glass-strong);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 248, 231, 0.5);
+            border-radius: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px var(--color-shadow);
+            transition: all var(--transition-fast) var(--ease-out);
+            position: relative;
+            font-size: 28px;
+        }
+        .icon-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 24px var(--color-shadow);
+        }
+        .icon-button:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 2px 8px var(--color-shadow);
+        }
+        .icon-button img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+        .icon-button .tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: var(--color-brown-dark);
+            color: var(--color-cream);
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all var(--transition-fast) var(--ease-out);
+        }
+        .icon-button:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 4px 16px var(--color-shadow); }
+            50% { box-shadow: 0 4px 24px rgba(147, 130, 200, 0.5), 0 0 12px rgba(147, 130, 200, 0.3); }
+        }
+        .icon-button.pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        /* ============================================================
+           PANELS (shared)
+           ============================================================ */
+        .panel {
+            position: absolute;
+            background: linear-gradient(145deg, rgba(255,248,231,0.95) 0%, rgba(232,220,196,0.95) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 248, 231, 0.6);
+            border-radius: 28px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.5);
+            padding: var(--space-md);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-normal) var(--ease-out),
+                        transform var(--transition-normal) var(--ease-bounce);
+        }
+        .panel.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .panel-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--color-brown-dark);
+            text-align: center;
+            margin-bottom: var(--space-md);
+            position: relative;
+        }
+        .panel-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light));
+            border-radius: 2px;
+            margin: 8px auto 0;
+        }
+        /* ============================================================
+           SEED SELECTION PANEL
+           ============================================================ */
+        .seed-panel {
+            left: 50%;
+            bottom: 104px;
+            transform: translate(-50%, 18px) scale(0.98);
+            width: min(560px, calc(100vw - 32px));
+            max-height: min(360px, calc(100vh - 220px));
+            overflow-y: auto;
+            z-index: 18;
+        }
+        .seed-panel.active {
+            transform: translate(-50%, 0) scale(1);
+        }
+        .seed-panel .panel-title {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        .seed-panel .close-button {
+            height: 46px;
+            font-size: 17px;
+        }
+        .old-seed-dialog,
+        .old-gui,
+        .legacy-gui,
+        .legacy-panel {
+            display: none !important;
+        }
+        .slot-panel {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.85);
+            width: min(520px, calc(100vw - 32px));
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+            z-index: 80;
+        }
+        .slot-panel.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .slot-list {
+            display: grid;
+            gap: 12px;
+        }
+        .slot-card {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 14px;
+            border: 2px solid rgba(107, 83, 68, 0.16);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.72);
+        }
+        .slot-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-brown-dark);
+        }
+        .slot-meta {
+            margin-top: 3px;
+            font-size: 12px;
+            color: var(--color-brown-mid);
+        }
+        .slot-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .slot-action-btn {
+            min-width: 72px;
+            height: 40px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--color-green-accent), var(--color-green-hover));
+            color: white;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #5E9049;
+        }
+        .slot-action-btn.delete {
+            background: linear-gradient(135deg, #C96F58, #A95442);
+            box-shadow: 0 3px 0 #8A4335;
+        }
+        .slot-action-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .starter-panel {
+            position: absolute;
+            inset: 0;
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(40, 28, 18, 0.48);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-normal) var(--ease-out);
+        }
+        .starter-panel.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .starter-card {
+            width: min(520px, calc(100vw - 32px));
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            background: linear-gradient(145deg, #FFF8E7 0%, #E8DCC4 100%);
+            border: 3px solid rgba(255, 248, 231, 0.85);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 18px 48px rgba(30, 18, 12, 0.35);
+        }
+        .starter-card h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 30px;
+            color: var(--color-brown-dark);
+            text-align: center;
+            margin-bottom: 18px;
+        }
+        .starter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .starter-field {
+            display: grid;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--color-brown-dark);
+        }
+        .starter-field input,
+        .starter-field select {
+            width: 100%;
+            min-height: 42px;
+            border: 2px solid rgba(107, 83, 68, 0.18);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--color-brown-dark);
+            font: 600 15px 'Poppins', sans-serif;
+            padding: 8px 10px;
+        }
+        .starter-field input[type="color"] {
+            padding: 4px;
+        }
+        .starter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .starter-actions .close-button {
+            height: 50px;
+            font-size: 18px;
+        }
+        .starter-actions .secondary {
+            background: linear-gradient(180deg, #E8DCC4 0%, #D4C4A8 100%);
+            color: var(--color-brown-dark);
+            box-shadow: 0 4px 0 #B8A888, 0 6px 16px rgba(60, 40, 25, 0.2);
+        }
+        .seed-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: var(--space-md);
+        }
+        .seed-item {
+            background: rgba(255, 255, 255, 0.85);
+            border: 3px solid transparent;
+            border-radius: 18px;
+            padding: 16px 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--transition-fast) var(--ease-out);
+            position: relative;
+            overflow: hidden;
+        }
+        .seed-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            border-radius: 18px 18px 0 0;
+            background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light));
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+        .seed-item:hover {
+            transform: translateY(-6px) rotate(-1deg);
+            border-color: var(--color-green-accent);
+            box-shadow: 0 8px 24px rgba(127, 176, 105, 0.35);
+        }
+        .seed-item:hover::before {
+            opacity: 1;
+        }
+        .seed-item.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+        .seed-item.disabled:hover {
+            transform: none;
+            border-color: transparent;
+            box-shadow: none;
+        }
+        .seed-item.disabled:hover::before {
+            opacity: 0;
+        }
+        .seed-item img {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
+            transition: transform var(--transition-fast) var(--ease-bounce);
+        }
+        .seed-item:hover img {
+            transform: scale(1.1);
+        }
+        .seed-item-name {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-brown-dark);
+            text-transform: capitalize;
+        }
+        .seed-item-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 28px;
+            padding: 0 10px;
+            background: linear-gradient(135deg, var(--color-gold), var(--color-gold-light));
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+        .seed-item.disabled .seed-item-count {
+            background: linear-gradient(135deg, #999, #bbb);
+        }
+        .close-button {
+            width: 100%;
+            height: 56px;
+            background: linear-gradient(135deg, var(--color-green-accent) 0%, var(--color-green-hover) 100%);
+            border: 3px solid rgba(0,0,0,0.08);
+            border-radius: 16px;
+            color: white;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast) var(--ease-out);
+            box-shadow: 0 4px 0 #5E9049, 0 6px 16px rgba(127, 176, 105, 0.3);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+        .close-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #5E9049, 0 8px 20px rgba(127, 176, 105, 0.4);
+        }
+        .close-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #5E9049, 0 3px 8px rgba(127, 176, 105, 0.3);
+        }
+        /* ============================================================
+           INVENTORY PANEL
+           ============================================================ */
+        .inventory-panel {
+            top: 90px;
+            right: var(--space-md);
+            width: min(380px, 85vw);
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            transform: translateX(420px);
+        }
+        .inventory-panel.active {
+            transform: translateX(0);
+        }
+        .inventory-section {
+            margin-bottom: var(--space-md);
+        }
+        .inventory-section:last-of-type {
+            margin-bottom: var(--space-md);
+        }
+        .section-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-brown-dark);
+            margin-bottom: var(--space-sm);
+            padding-bottom: 8px;
+            border-bottom: 2px dashed rgba(107, 83, 68, 0.2);
+        }
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .inventory-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all var(--transition-fast) var(--ease-out);
+            border: 2px solid transparent;
+        }
+        .inventory-item:hover {
+            border-color: rgba(242, 166, 90, 0.3);
+            transform: scale(1.02);
+        }
+        .inventory-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        .inventory-item-info {
+            flex: 1;
+        }
+        .inventory-item-name {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-brown-dark);
+            text-transform: capitalize;
+        }
+        .inventory-item-count {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-brown-mid);
+        }
+        .inventory-empty {
+            text-align: center;
+            padding: 20px;
+            color: var(--color-brown-mid);
+            font-size: 14px;
+            font-style: italic;
+        }
+        /* ============================================================
+           NOTIFICATION TOASTS
+           ============================================================ */
+        .toast-container {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--color-glass-strong);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(255, 248, 231, 0.6);
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-brown-dark);
+            box-shadow: 0 6px 24px var(--color-shadow);
+            animation: toastIn 0.4s var(--ease-bounce) forwards, toastOut 0.3s ease 2s forwards;
+            white-space: nowrap;
+            max-width: calc(100vw - 32px);
+            overflow-wrap: anywhere;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.95);
+            }
+        }
+        /* ============================================================
+           REST AREA SCENE
+           ============================================================ */
+        .rest-area {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(180deg, #1a1a3e 0%, #2d2b55 30%, #3d5a80 60%, #6b8e5a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 20;
+            transition: opacity var(--transition-slow) var(--ease-out);
+        }
+        .rest-area.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .rest-area-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rest-area-bench {
+            max-width: 350px;
+            max-height: 350px;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
+            animation: benchFloat 4s ease-in-out infinite;
+        }
+        @keyframes benchFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .rest-area-message {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 26px;
+            color: rgba(255, 248, 231, 0.9);
+            text-align: center;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+            padding: var(--space-sm);
+            letter-spacing: 1px;
+        }
+        .rest-timer {
+            position: absolute;
+            top: 130px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            color: rgba(255, 248, 231, 0.5);
+            text-align: center;
+        }
+        #rest-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .return-button {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 220px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--color-cream) 0%, var(--color-beige) 100%);
+            border: 3px solid rgba(107, 83, 68, 0.15);
+            border-radius: 20px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-brown-dark);
+            cursor: pointer;
+            box-shadow: 0 4px 0 #C4B8A0, 0 6px 20px rgba(0, 0, 0, 0.25);
+            transition: all var(--transition-fast) var(--ease-out);
+        }
+        .return-button:hover {
+            transform: translateX(-50%) translateY(-3px);
+            box-shadow: 0 7px 0 #C4B8A0, 0 9px 28px rgba(0, 0, 0, 0.3);
+        }
+        .return-button:active {
+            transform: translateX(-50%) translateY(2px);
+            box-shadow: 0 2px 0 #C4B8A0, 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        /* ============================================================
+           PANEL BACKDROP
+           ============================================================ */
+        .panel-backdrop {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-normal) var(--ease-out);
+            z-index: 14;
+        }
+        .panel-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        @media (max-width: 820px) {
+            .menu-center {
+                top: 51%;
+                width: min(360px, 86vw);
+            }
+            .menu-window {
+                width: min(210px, 54vw);
+                margin-bottom: -18px;
+            }
+            .menu-title-wrap {
+                margin-bottom: 20px;
+            }
+            .menu-title-line1 {
+                font-size: clamp(24px, 7vw, 34px);
+            }
+            .menu-title-line2 {
+                font-size: clamp(38px, 12vw, 56px);
+            }
+            .menu-buttons {
+                gap: 10px;
+                max-width: 280px;
+            }
+            .menu-btn {
+                height: 56px;
+                border-radius: 20px;
+            }
+            .menu-pot {
+                transform: scale(0.78);
+                bottom: 4%;
+                opacity: 0.9;
+            }
+            .menu-pot--left { left: 1%; }
+            .menu-pot--right { right: 1%; }
+            .top-bar {
+                height: auto;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 12px;
+            }
+            .top-right-group {
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+            .game-actions {
+                order: 2;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            .game-action-btn {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                font-size: 18px;
+            }
+            .starter-grid {
+                grid-template-columns: 1fr;
+            }
+            .save-status {
+                width: 100%;
+                min-width: 0;
+                order: 3;
+            }
+            .time-indicator,
+            .day-pill {
+                min-height: 44px;
+                padding: 8px 12px;
+                font-size: 14px;
+                border-radius: 14px;
+            }
+            .day-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 17px;
+            }
+            .hotbar {
+                gap: 8px;
+                padding: 10px;
+                border-radius: 20px;
+            }
+            .hotbar-slot,
+            .icon-button {
+                width: 54px;
+                height: 54px;
+                border-radius: 14px;
+                font-size: 26px;
+            }
+            .hotbar-slot-label {
+                font-size: 9px;
+            }
+            .hotbar-corner-btn {
+                bottom: 92px;
+            }
+            .hotbar-corner-btn--left {
+                left: 12px;
+            }
+            .panel {
+                border-radius: 20px;
+                padding: 18px;
+            }
+            .seed-panel {
+                width: min(520px, calc(100vw - 24px));
+                max-height: calc(100vh - 184px);
+                bottom: 88px;
+            }
+            .inventory-panel {
+                top: 76px;
+                right: 12px;
+                width: min(360px, calc(100vw - 24px));
+                max-height: calc(100vh - 184px);
+            }
+            .toast-container {
+                top: 76px;
+                width: calc(100vw - 24px);
+            }
+            .toast {
+                white-space: normal;
+                text-align: center;
+            }
+            .rest-area-message {
+                top: 64px;
+                width: calc(100vw - 32px);
+                font-size: 22px;
+            }
+            .return-button {
+                bottom: 32px;
+                width: min(220px, calc(100vw - 32px));
+            }
+        }
+        @media (max-width: 480px), (max-height: 640px) {
+            .menu-corner-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 21px;
+                border-width: 2px;
+            }
+            .menu-corner-btn--tl { top: 12px; left: 12px; }
+            .menu-corner-btn--tr { top: 12px; right: 12px; }
+            .menu-center {
+                top: 53%;
+                max-height: calc(100% - 88px);
+                width: min(320px, 88vw);
+            }
+            .menu-window {
+                width: min(150px, 42vw);
+                margin-bottom: -12px;
+            }
+            .menu-title-wrap {
+                margin-bottom: 14px;
+            }
+            .menu-subtitle {
+                font-size: 11px;
+                letter-spacing: 2px;
+                margin-top: 4px;
+            }
+            .menu-buttons {
+                max-width: 250px;
+            }
+            .menu-btn {
+                height: 48px;
+                font-size: 19px;
+                border-width: 2px;
+            }
+            .menu-pot {
+                display: none;
+            }
+            .sunbeam {
+                width: 82px;
+                filter: blur(10px);
+            }
+            .top-bar {
+                padding: 8px;
+            }
+            .time-indicator {
+                max-width: 46vw;
+            }
+            .day-pill {
+                max-width: 50vw;
+                gap: 6px;
+            }
+            .day-coins {
+                padding-left: 6px;
+                margin-left: 0;
+            }
+            .hotbar-wrap {
+                bottom: 8px;
+                max-width: calc(100vw - 16px);
+            }
+            .hotbar {
+                gap: 6px;
+                padding: 8px;
+                border-width: 2px;
+            }
+            .hotbar-slot,
+            .icon-button {
+                width: 48px;
+                height: 48px;
+                font-size: 23px;
+            }
+            .hotbar-count {
+                top: -5px;
+                right: -5px;
+                min-width: 20px;
+                height: 20px;
+                font-size: 11px;
+            }
+            .hotbar-divider {
+                height: 36px;
+                margin: 0 2px;
+            }
+            .hotbar-corner-btn {
+                bottom: 76px;
+            }
+            .panel-title {
+                font-size: 24px;
+                margin-bottom: 16px;
+            }
+            .seed-grid,
+            .inventory-grid {
+                grid-template-columns: 1fr;
+            }
+            .seed-panel {
+                bottom: 70px;
+                max-height: calc(100vh - 150px);
+            }
+            .seed-item {
+                min-height: 96px;
+                padding: 12px;
+            }
+            .seed-item img {
+                width: 56px;
+                height: 56px;
+            }
+            .inventory-panel {
+                top: 64px;
+                max-height: calc(100vh - 152px);
+            }
+            .rest-area-bench {
+                max-width: min(280px, 70vw);
+                max-height: 280px;
+            }
+        }
+        /* ============================================================
+           ANIMATIONS & UTILITIES
+           ============================================================ */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        /* Scrollbar styling for panels */
+        .panel::-webkit-scrollbar {
+            width: 6px;
+        }
+        .panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .panel::-webkit-scrollbar-thumb {
+            background: rgba(107, 83, 68, 0.25);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        /* Works before Astrocade calls run() — fixes Live Server / file:// testing */
+        (function () {
+            window.__wmUserStarted = false;
+            window.__wmRunStarted = false;
+            window.__wmStartGame = function (e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                window.__wmUserStarted = true;
+                var screen = document.getElementById('start-screen');
+                var ui = document.getElementById('ui-overlay');
+                var c = document.getElementById('game-canvas');
+                if (screen) screen.classList.add('hidden');
+                if (ui) ui.style.display = '';
+                if (c) c.style.pointerEvents = 'auto';
+                if (typeof window.__wmForceBeginPlay === 'function') {
+                    window.__wmForceBeginPlay();
+                } else if (typeof run === 'function' && !window.__wmRunStarted) {
+                    run(window.mode || 'play').catch(function (err) {
+                        console.error('[Whispering Meadows] run() failed:', err);
+                    });
+                }
+            };
+            document.addEventListener('click', function (e) {
+                var btn = e.target && e.target.closest ? e.target.closest('#start-button') : null;
+                if (btn) window.__wmStartGame(e);
+            }, true);
+        })();
+    </script>
+    <div id="game-world">
+        <canvas id="game-canvas"></canvas>
+        <!-- Main Menu — cozy wooden cabin -->
+        <div class="start-screen" id="start-screen">
+            <div class="cabin-back-wall" aria-hidden="true"></div>
+            <div class="cabin-floor" aria-hidden="true"></div>
+            <div class="sunbeam sunbeam--left" aria-hidden="true"></div>
+            <div class="sunbeam sunbeam--right" aria-hidden="true"></div>
+            <canvas id="menu-particles" aria-hidden="true"></canvas>
+
+            <button type="button" class="menu-corner-btn menu-corner-btn--tl" id="menu-settings-corner" aria-label="Settings">⚙️</button>
+            <button type="button" class="menu-corner-btn menu-corner-btn--tr" id="menu-music-toggle" aria-label="Toggle music">🎵</button>
+
+            <div class="menu-pot menu-pot--left" aria-hidden="true">
+                <div class="menu-pot-flowers">💜🌼💜</div>
+                <div class="menu-pot-vase"></div>
+            </div>
+            <div class="menu-pot menu-pot--right" aria-hidden="true">
+                <div class="menu-pot-flowers">🌻🧡🌼</div>
+                <div class="menu-pot-vase"></div>
+            </div>
+
+            <div class="menu-center">
+                <div class="menu-window">
+                    <div class="menu-window-frame">
+                        <div class="menu-window-view">
+                            <div class="menu-window-sun"></div>
+                            <div class="menu-window-tree menu-window-tree--l"></div>
+                            <div class="menu-window-tree menu-window-tree--r"></div>
+                            <div class="menu-window-hill-2"></div>
+                            <div class="menu-window-hills"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-title-wrap">
+                    <div class="menu-title-line1">Bright &amp; Cozy</div>
+                    <div class="menu-title-line2">
+                        <span class="menu-title-sparkle">✦</span> Farming <span class="menu-title-sparkle">✦</span>
+                    </div>
+                    <div class="menu-subtitle">whispering meadows</div>
+                </div>
+                <div class="menu-buttons">
+                    <button type="button" class="menu-btn menu-btn--primary" id="start-button" onclick="window.__wmStartGame && window.__wmStartGame(event)">Start Game</button>
+                    <button type="button" class="menu-btn menu-btn--continue" id="continue-button">Save Slots</button>
+                    <button type="button" class="menu-btn menu-btn--settings" id="menu-settings-btn">Settings</button>
+                </div>
+            </div>
+
+            <div class="menu-toast" id="menu-toast" role="status"></div>
+
+            <div class="panel slot-panel" id="slot-panel" aria-hidden="true">
+                <h2 class="panel-title">Save Slots</h2>
+                <div class="slot-list" id="slot-list"></div>
+                <button type="button" class="close-button" id="slot-close-button">Back</button>
+            </div>
+
+            <div class="starter-panel" id="starter-panel" aria-hidden="true">
+                <div class="starter-card">
+                    <h2>Start Your Farm</h2>
+                    <div class="starter-grid">
+                        <label class="starter-field">Your name
+                            <input id="starter-player-name" maxlength="18" value="Mellow">
+                        </label>
+                        <label class="starter-field">Farm name
+                            <input id="starter-farm-name" maxlength="22" value="Meadow Home">
+                        </label>
+                        <label class="starter-field">Shirt color
+                            <input type="color" id="starter-shirt-color" value="#FFFFFF">
+                        </label>
+                        <label class="starter-field">Clothes color
+                            <input type="color" id="starter-clothes-color" value="#5B8BD4">
+                        </label>
+                        <label class="starter-field">Pet type
+                            <select id="starter-pet-type">
+                                <option value="bunny">Bunny</option>
+                                <option value="cat">Cat</option>
+                                <option value="dog">Dog</option>
+                                <option value="bird">Bird</option>
+                            </select>
+                        </label>
+                        <label class="starter-field">Pet name
+                            <input id="starter-pet-name" maxlength="18" value="Clover">
+                        </label>
+                    </div>
+                    <div class="starter-actions">
+                        <button type="button" class="close-button" id="starter-begin-button">Begin</button>
+                        <button type="button" class="close-button secondary" id="starter-cancel-button">Back</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-settings-panel" id="menu-settings-panel" aria-hidden="true">
+                <div class="menu-settings-card">
+                    <h2>⚙️ Settings</h2>
+                    <div class="menu-setting-row">
+                        <label><span>Music</span><span id="menu-music-val">50%</span></label>
+                        <input type="range" id="menu-music-slider" min="0" max="100" value="50">
+                    </div>
+                    <div class="menu-setting-row">
+                        <label><span>Sound effects</span><span id="menu-sfx-val">70%</span></label>
+                        <input type="range" id="menu-sfx-slider" min="0" max="100" value="70">
+                    </div>
+                    <button type="button" class="menu-settings-close" id="menu-settings-close">Done</button>
+                </div>
+            </div>
+        </div>
+        <!-- UI Overlay -->
+        <div class="ui-overlay" id="ui-overlay" style="display:none;">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="time-indicator" id="time-indicator">
+                    <span class="time-icon" id="time-icon">☀️</span>
+                    <span id="time-text">Afternoon</span>
+                </div>
+                <div class="top-right-group">
+                    <div class="day-pill" id="day-pill">
+                        <span class="day-avatar" aria-hidden="true">🧑‍🌾</span>
+                        <span id="farm-name-label">Meadow Home</span>
+                        <span>Day <span id="game-day">1</span></span>
+                        <span class="day-coins">🪙 <span id="coin-total">0</span></span>
+                    </div>
+                    <div class="game-actions" aria-label="Game actions">
+                        <button type="button" class="game-action-btn" id="quick-save-button" aria-label="Save game">💾</button>
+                        <button type="button" class="game-action-btn" id="game-menu-button" aria-label="Game menu">☰</button>
+                    </div>
+                    <div class="save-status" id="save-status" aria-live="polite">Autosave on</div>
+                </div>
+            </div>
+            <!-- Corner actions -->
+            <button class="icon-button hotbar-corner-btn hotbar-corner-btn--left" id="rest-button" aria-label="Rest Area">
+                🌙
+                <span class="tooltip">Rest Area</span>
+            </button>
+            <!-- Bottom hotbar -->
+            <div class="hotbar-wrap">
+                <div class="hotbar" id="hotbar">
+                    <button type="button" class="hotbar-slot" id="hotbar-water" aria-label="Watering can">
+                        🚿
+                        <span class="hotbar-slot-label">water</span>
+                    </button>
+                    <div class="hotbar-divider" aria-hidden="true"></div>
+                    <button type="button" class="hotbar-slot" data-crop="carrot" aria-label="Carrot seeds">
+                        🥕
+                        <span class="hotbar-count" data-count="carrot">0</span>
+                    </button>
+                    <button type="button" class="hotbar-slot" data-crop="tomato" aria-label="Tomato seeds">
+                        🍅
+                        <span class="hotbar-count" data-count="tomato">0</span>
+                    </button>
+                    <button type="button" class="hotbar-slot" data-crop="wheat" aria-label="Wheat seeds">
+                        🌾
+                        <span class="hotbar-count" data-count="wheat">0</span>
+                    </button>
+                    <button type="button" class="hotbar-slot" data-crop="flower" aria-label="Flower seeds">
+                        🌸
+                        <span class="hotbar-count" data-count="flower">0</span>
+                    </button>
+                    <div class="hotbar-divider" aria-hidden="true"></div>
+                    <button type="button" class="hotbar-slot" id="inventory-button" aria-label="Inventory">
+                        🎒
+                        <span class="hotbar-slot-label">bag</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Notification Toasts -->
+            <div class="toast-container" id="toast-container"></div>
+            <!-- Panel Backdrop -->
+            <div class="panel-backdrop" id="panel-backdrop"></div>
+            <!-- Seed Selection Panel -->
+            <div class="panel seed-panel" id="seed-panel">
+                <h2 class="panel-title">🌱 Choose a Seed</h2>
+                <div class="seed-grid" id="seed-grid"></div>
+                <button class="close-button" id="close-seed-panel">Close</button>
+            </div>
+            <!-- Inventory Panel -->
+            <div class="panel inventory-panel" id="inventory-panel">
+                <h2 class="panel-title">🎒 Inventory</h2>
+                <div class="inventory-section">
+                    <h3 class="section-title">🌱 Seeds</h3>
+                    <div class="inventory-grid" id="seeds-inventory"></div>
+                </div>
+                <div class="inventory-section">
+                    <h3 class="section-title">🧺 Harvested</h3>
+                    <div class="inventory-grid" id="harvested-inventory"></div>
+                </div>
+                <button class="close-button" id="close-inventory-panel">Close</button>
+            </div>
+        </div>
+        <!-- Rest Area Scene -->
+        <div class="rest-area" id="rest-area">
+            <div class="rest-area-content">
+                <div class="rest-area-message" id="rest-message">A peaceful place to rest...</div>
+                <div class="rest-timer" id="rest-timer"></div>
+                <img class="rest-area-bench" id="rest-bench-img" alt="Rest Area">
+                <canvas id="rest-canvas"></canvas>
+            </div>
+            <button class="return-button" id="return-button">🏡 Return to Farm</button>
+        </div>
+    </div>
+    <script>
+        /**
+         * WHISPERING MEADOWS
+         *
+         * A gentle top-down farming simulation focused on patience, calm, and emotional comfort.
+         * Players plant seeds, watch crops grow, harvest them, and personalize their cozy farm.
+         *
+         * Core Mechanics:
+         * - Plant seeds in soil plots (tap empty plot → select seed → plant)
+         * - Crops grow over time through 3 stages: seed → sprout → mature
+         * - Harvest mature crops to collect them in inventory
+         * - Visit the Rest Area for peaceful contemplation
+         * - Day/night cycle with atmospheric sky rendering
+         * - Ambient particles (butterflies, leaves, fireflies)
+         * - Pet bunny companion wanders the farm
+         */
+        async function run(mode) {
+            if (window.__wmRunStarted) {
+                return window.__wmRunPromise;
+            }
+            window.__wmRunStarted = true;
+
+            const gameWorld = document.getElementById('game-world');
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.style.pointerEvents = 'none';
+            const restCanvas = document.getElementById('rest-canvas');
+            const restCtx = restCanvas ? restCanvas.getContext('2d') : null;
+            let currentMode = mode;
+            let gameStarted = false;
+            let saveDirty = false;
+            let saveInFlight = false;
+            let saveDebounceTimer = null;
+            let autoSaveTimer = null;
+            let activeSaveSlot = null;
+            const SAVE_SLOT_COUNT = 3;
+
+            function gameLog(message) {
+                if (typeof lib !== 'undefined' && lib.log) lib.log(message);
+            }
+
+            const DEFAULT_GAME_CONFIG = {
+                crops: {
+                    available: ['carrot', 'tomato', 'wheat', 'flower'],
+                    growthSpeedMultiplier: 1
+                },
+                soilPlots: [],
+                decorations: {
+                    tree: { visible: true, x: 100, y: 200 },
+                    fence: { visible: true, x: 300, y: 150 },
+                    flowerPatch: { visible: true, x: 500, y: 250 }
+                },
+                player: {
+                    name: 'Mellow',
+                    shirtColor: '#FFFFFF',
+                    clothesColor: '#5B8BD4'
+                },
+                farm: { name: 'Meadow Home' },
+                pet: { type: 'bunny', name: 'Clover', speed: 1 },
+                atmosphere: {
+                    timeOfDay: 'afternoon',
+                    cycleSpeed: 'normal',
+                    weather: 'sunny',
+                    particleDensity: 1
+                },
+                colorPalette: { grass: '#8B9D83', cabin: '#A67C52', sky: '#B8D4E8' },
+                audio: {
+                    backgroundMusic: 'background_music_lofi',
+                    musicVolume: 0.5,
+                    sfxVolume: 0.7,
+                    ambientVolume: 0.6
+                },
+                inventory: {
+                    seeds: { carrot: 5, tomato: 5, wheat: 5, flower: 3 },
+                    harvested: { carrot: 0, tomato: 0, wheat: 0, flower: 0 }
+                },
+                gameDay: 1,
+                lastDayNightCycle: 0
+            };
+            window.gameConfig = Object.assign({}, DEFAULT_GAME_CONFIG, window.gameConfig || {});
+            window.gameConfig.crops = Object.assign({}, DEFAULT_GAME_CONFIG.crops, window.gameConfig.crops);
+            window.gameConfig.atmosphere = Object.assign({}, DEFAULT_GAME_CONFIG.atmosphere, window.gameConfig.atmosphere);
+            window.gameConfig.colorPalette = Object.assign({}, DEFAULT_GAME_CONFIG.colorPalette, window.gameConfig.colorPalette);
+            window.gameConfig.audio = Object.assign({}, DEFAULT_GAME_CONFIG.audio, window.gameConfig.audio);
+            window.gameConfig.inventory = Object.assign({}, DEFAULT_GAME_CONFIG.inventory, window.gameConfig.inventory);
+            window.gameConfig.inventory.seeds = Object.assign({}, DEFAULT_GAME_CONFIG.inventory.seeds, window.gameConfig.inventory.seeds || {});
+            window.gameConfig.inventory.harvested = Object.assign({}, DEFAULT_GAME_CONFIG.inventory.harvested, window.gameConfig.inventory.harvested || {});
+            window.gameConfig.decorations = Object.assign({}, DEFAULT_GAME_CONFIG.decorations, window.gameConfig.decorations);
+            window.gameConfig.player = Object.assign({}, DEFAULT_GAME_CONFIG.player, window.gameConfig.player || {});
+            window.gameConfig.farm = Object.assign({}, DEFAULT_GAME_CONFIG.farm, window.gameConfig.farm || {});
+            window.gameConfig.pet = Object.assign({}, DEFAULT_GAME_CONFIG.pet, window.gameConfig.pet || {});
+            // ============================================================
+            // CANVAS SETUP
+            // ============================================================
+            function resizeCanvas() {
+                const rect = gameWorld.getBoundingClientRect();
+                const w = Math.max(1, Math.floor(rect.width) || gameWorld.clientWidth || 1);
+                const h = Math.max(1, Math.floor(rect.height) || gameWorld.clientHeight || 1);
+                canvas.width = w;
+                canvas.height = h;
+                if (restCanvas) {
+                    restCanvas.width = w;
+                    restCanvas.height = h;
+                }
+                recalculateFarmLayout();
+            }
+            // ============================================================
+            // FARM LAYOUT (responsive)
+            // ============================================================
+            let FARM_WIDTH, FARM_HEIGHT, FARM_X, FARM_Y;
+            let PLOT_SIZE, PLOT_SPACING, PLOTS_PER_ROW, PLOTS_START_X, PLOTS_START_Y;
+            let CABIN_X, CABIN_Y, CABIN_W, CABIN_H;
+            let FENCE_PAD, GRID_W, GRID_H, PATH_W, PLAYER_X, PLAYER_Y;
+            let selectedHotbarCrop = null;
+            let playerBob = 0;
+            let playerPos = { x: 0, y: 0 };
+            let playerTarget = null;
+            let playerInput = { up: false, down: false, left: false, right: false };
+            let petPos = { x: 0, y: 0 };
+            let petTarget = null;
+            let petWaypoints = [];
+            let petWaypointIdx = 0;
+            let petPauseTimer = 0;
+            let petBounce = 0;
+            function initPetWaypoints() {
+                petWaypoints = [
+                    { x: FARM_X + FARM_WIDTH * 0.25, y: FARM_Y + FARM_HEIGHT * 0.3 },
+                    { x: FARM_X + FARM_WIDTH * 0.75, y: FARM_Y + FARM_HEIGHT * 0.3 },
+                    { x: FARM_X + FARM_WIDTH * 0.75, y: FARM_Y + FARM_HEIGHT * 0.75 },
+                    { x: FARM_X + FARM_WIDTH * 0.25, y: FARM_Y + FARM_HEIGHT * 0.75 },
+                    { x: FARM_X + FARM_WIDTH * 0.5, y: FARM_Y + FARM_HEIGHT * 0.5 }
+                ];
+                if (petWaypoints.length > 0) {
+                    petPos = { x: petWaypoints[0].x, y: petWaypoints[0].y };
+                    petTarget = petWaypoints[0];
+                }
+            }
+            function recalculateFarmLayout() {
+                const cw = Math.max(canvas.width, 1);
+                const ch = Math.max(canvas.height, 1);
+                const hotbarReserve = 120;
+                const scale = Math.min(cw / 900, (ch - hotbarReserve) / 1060, 1.35);
+                FARM_WIDTH = Math.floor(720 * scale);
+                FARM_HEIGHT = Math.floor(900 * scale);
+                FARM_X = Math.floor((cw - FARM_WIDTH) / 2);
+                FARM_Y = Math.floor((ch - hotbarReserve - FARM_HEIGHT) / 2);
+                FARM_Y = Math.max(Math.floor(ch * 0.06), FARM_Y);
+                FENCE_PAD = Math.floor(12 * scale);
+                PLOT_SIZE = Math.floor(76 * scale);
+                PLOT_SPACING = Math.floor(14 * scale);
+                PLOTS_PER_ROW = 3;
+                const gridWidth = PLOTS_PER_ROW * PLOT_SIZE + (PLOTS_PER_ROW - 1) * PLOT_SPACING;
+                PLOTS_START_X = FARM_X + Math.floor((FARM_WIDTH - gridWidth) / 2);
+                PLOTS_START_Y = FARM_Y + Math.floor(340 * scale);
+                CABIN_W = Math.floor(180 * scale);
+                CABIN_H = Math.floor(160 * scale);
+                CABIN_X = FARM_X + Math.floor((FARM_WIDTH - CABIN_W) / 2);
+                CABIN_Y = FARM_Y + Math.floor(30 * scale);
+                GRID_W = PLOTS_PER_ROW * PLOT_SIZE + (PLOTS_PER_ROW - 1) * PLOT_SPACING;
+                GRID_H = 3 * PLOT_SIZE + 2 * PLOT_SPACING;
+                PATH_W = Math.floor(36 * scale);
+                PLAYER_X = PLOTS_START_X + GRID_W / 2;
+                PLAYER_Y = PLOTS_START_Y + GRID_H / 2;
+                if (!playerPos.x || !playerPos.y) {
+                    playerPos = { x: PLAYER_X, y: PLAYER_Y };
+                } else {
+                    playerPos.x = Math.max(FARM_X + 24, Math.min(FARM_X + FARM_WIDTH - 24, playerPos.x));
+                    playerPos.y = Math.max(FARM_Y + 24, Math.min(FARM_Y + FARM_HEIGHT - 24, playerPos.y));
+                }
+                // Recalculate soil plot positions
+                if (window.gameConfig.soilPlots && window.gameConfig.soilPlots.length > 0) {
+                    window.gameConfig.soilPlots.forEach((plot, i) => {
+                        const row = Math.floor(i / PLOTS_PER_ROW);
+                        const col = i % PLOTS_PER_ROW;
+                        plot.x = PLOTS_START_X + col * (PLOT_SIZE + PLOT_SPACING);
+                        plot.y = PLOTS_START_Y + row * (PLOT_SIZE + PLOT_SPACING);
+                    });
+                }
+                // Recalculate pet waypoints
+                initPetWaypoints();
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            // ============================================================
+            // ASSET LOADING
+            // ============================================================
+            const EMBEDDED_ASSETS = {
+                farm_cabin: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/farm_cabin_591169da-7a4b-49fe-92c2-1868b9254e16.webp', type: 'image' },
+                carrot_seed: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/carrot_seed_65921ff6-cd36-4b5d-87d3-b18280e46963.webp', type: 'image' },
+                carrot_sprout: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/carrot_sprout_d63de531-0d67-4853-af2c-3ac47b4a18bb.webp', type: 'image' },
+                carrot_mature: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/carrot_mature_fa960ff5-40cb-4389-ae1e-c5fac01b11d2.webp', type: 'image' },
+                tomato_seed: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/tomato_seed_90473a2f-d1d3-4441-a1f4-1f8a05a7ef98.webp', type: 'image' },
+                tomato_sprout: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/tomato_sprout_d96d4982-1c11-4d9f-9ca8-146d558cac47.webp', type: 'image' },
+                tomato_mature: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/tomato_mature_075cd88b-ecf1-4e5d-98fb-c56e4bf3d9ad.webp', type: 'image' },
+                wheat_seed: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/wheat_seed_0d148551-ca33-4530-a64d-d34c5a62c8fa.webp', type: 'image' },
+                wheat_sprout: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/wheat_sprout_01ca38fd-d034-4fba-967a-414c10314af2.webp', type: 'image' },
+                wheat_mature: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/wheat_mature_66ea38cb-851c-418d-ad69-e667516ff14e.webp', type: 'image' },
+                flower_seed: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/flower_seed_5f02fab0-666f-47a3-a8f5-5b628e8189e0.webp', type: 'image' },
+                flower_sprout: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/flower_sprout_bc889229-a539-4eb4-ac27-3680fc02275f.webp', type: 'image' },
+                flower_mature: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/flower_mature_9a1e4702-f688-4729-8da6-cd1f4e335062.webp', type: 'image' },
+                pet_bunny_idle: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/pet_bunny_idle_fae86bc5-9f21-4816-8fef-55af770ce7ad.webp', type: 'image' },
+                decorative_tree_small: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/decorative_tree_small_5aaecf77-fc92-4363-b8c2-7b5ba7faca3a.webp', type: 'image' },
+                decorative_fence: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/decorative_fence_cbd951a2-9cd5-4bc3-b7e3-009003c696c3.webp', type: 'image' },
+                decorative_flower_patch: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/decorative_flower_patch_9078c512-c1c6-4657-872f-5da8b5232241.webp', type: 'image' },
+                ui_panel_background: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/ui_panel_background_e1c4b09e-4bfd-480c-a302-429c97aea379.webp', type: 'image' },
+                rest_area_bench: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/rest_area_bench_0a817453-333f-4d42-a1f0-81801d8b25a2.webp', type: 'image' },
+                particle_firefly: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/particle_firefly_2f7d8e12-37e2-4eeb-9376-3c94ca25807f.webp', type: 'image' },
+                particle_leaf: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/particle_leaf_ad707898-8001-441c-b88d-71b9a079541e.webp', type: 'image' },
+                particle_butterfly: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/particle_butterfly_0735afa0-f4e3-4b87-83ba-fe6b9ba2564d.webp', type: 'image' },
+                icon_inventory: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/icon_inventory_f409d1b8-8b70-43ab-a112-fc4c993d1b21.webp', type: 'image' },
+                icon_settings: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/images/icon_settings_0706f353-92f0-4a4f-9619-ada61e0dc2bf.webp', type: 'image' },
+                background_music_lofi: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/background_music_lofi_d9c38091-0b3a-4583-b894-ebf871eee44a.mp3', type: 'audio' },
+                sfx_plant_seed: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/sfx_plant_seed_b9615e85-7373-468e-b7a5-cddcbd497222.mp3', type: 'audio' },
+                sfx_harvest_crop: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/sfx_harvest_crop_e0f93d2f-0112-4c80-8375-e738282db112.mp3', type: 'audio' },
+                sfx_ui_open: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/sfx_ui_open_8e440788-1955-4ad0-8227-6b984faccb5f.mp3', type: 'audio' },
+                sfx_ui_close: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/sfx_ui_close_52fb634e-4df9-480d-adfe-cd824c209f16.mp3', type: 'audio' },
+                ambient_rest_area: { url: 'https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/ambient_rest_area_8af9ddf8-12b8-4c14-93bf-d9ff4dcf45df.mp3', type: 'audio' }
+            };
+            function getAssetInfo(id) {
+                if (typeof lib !== 'undefined' && lib.getAsset) {
+                    const fromLib = lib.getAsset(id);
+                    if (fromLib) return fromLib;
+                }
+                return EMBEDDED_ASSETS[id];
+            }
+            const assetCache = {};
+            const audioCache = {};
+            let audioContext = null;
+            async function preloadAssets() {
+                const imageIds = [
+                    'farm_cabin', 'carrot_seed', 'carrot_sprout', 'carrot_mature',
+                    'tomato_seed', 'tomato_sprout', 'tomato_mature',
+                    'wheat_seed', 'wheat_sprout', 'wheat_mature',
+                    'flower_seed', 'flower_sprout', 'flower_mature',
+                    'pet_bunny_idle', 'decorative_tree_small', 'decorative_fence',
+                    'decorative_flower_patch', 'ui_panel_background', 'rest_area_bench',
+                    'particle_firefly', 'particle_leaf', 'particle_butterfly',
+                    'icon_inventory', 'icon_settings'
+                ];
+                const audioIds = [
+                    'background_music_lofi', 'sfx_plant_seed', 'sfx_harvest_crop',
+                    'sfx_ui_open', 'sfx_ui_close', 'ambient_rest_area'
+                ];
+                // Audio context on first interaction
+                const initAudio = () => {
+                    if (!audioContext) {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                };
+                document.addEventListener('click', initAudio, { once: true });
+                document.addEventListener('touchstart', initAudio, { once: true });
+                // Load images
+                const imagePromises = imageIds.map(id => {
+                    return new Promise((resolve) => {
+                        const assetInfo = getAssetInfo(id);
+                        if (assetInfo && assetInfo.type === 'image') {
+                            const img = new Image();
+                            img.crossOrigin = 'anonymous';
+                            img.onload = () => {
+                                assetCache[id] = { img, info: assetInfo };
+                                resolve();
+                            };
+                            img.onerror = () => {
+                                gameLog(`Failed to load: ${id}`);
+                                resolve();
+                            };
+                            img.src = assetInfo.url;
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+                // Load audio buffers
+                const audioPromises = audioIds.map(id => {
+                    return new Promise((resolve) => {
+                        const assetInfo = getAssetInfo(id);
+                        if (assetInfo && assetInfo.type === 'audio') {
+                            fetch(assetInfo.url)
+                                .then(r => r.arrayBuffer())
+                                .then(buf => {
+                                    audioCache[id] = { arrayBuffer: buf, info: assetInfo, buffer: null };
+                                    resolve();
+                                })
+                                .catch(() => {
+                                    gameLog(`Failed to load audio: ${id}`);
+                                    resolve();
+                                });
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+                await Promise.all([...imagePromises, ...audioPromises]);
+                // Set rest area bench image
+                if (assetCache['rest_area_bench']) {
+                    document.getElementById('rest-bench-img').src = assetCache['rest_area_bench'].img.src;
+                }
+            }
+            // Load assets in background — must not block menu buttons
+            void preloadAssets().catch((err) => gameLog('Preload: ' + (err && err.message ? err.message : 'failed')));
+            // ============================================================
+            // AUDIO SYSTEM
+            // ============================================================
+            let bgMusicSource = null;
+            let bgMusicGain = null;
+            async function decodeAudio(id) {
+                if (!audioContext || !audioCache[id]) return null;
+                if (audioCache[id].buffer) return audioCache[id].buffer;
+                try {
+                    const buffer = await audioContext.decodeAudioData(audioCache[id].arrayBuffer.slice(0));
+                    audioCache[id].buffer = buffer;
+                    return buffer;
+                } catch (e) {
+                    gameLog(`Decode error: ${id}`);
+                    return null;
+                }
+            }
+            async function playSound(id, volume = 1.0, loop = false) {
+                if (!audioContext) return null;
+                const buffer = await decodeAudio(id);
+                if (!buffer) return null;
+                const source = audioContext.createBufferSource();
+                const gain = audioContext.createGain();
+                source.buffer = buffer;
+                source.loop = loop;
+                gain.gain.value = volume;
+                source.connect(gain);
+                gain.connect(audioContext.destination);
+                source.start(0);
+                return { source, gain };
+            }
+            async function startBgMusic() {
+                if (bgMusicSource) return;
+                const result = await playSound(
+                    window.gameConfig.audio.backgroundMusic,
+                    window.gameConfig.audio.musicVolume,
+                    true
+                );
+                if (result) {
+                    bgMusicSource = result.source;
+                    bgMusicGain = result.gain;
+                }
+            }
+            function stopBgMusic() {
+                if (bgMusicSource) {
+                    try { bgMusicSource.stop(); } catch(e) {}
+                    bgMusicSource = null;
+                    bgMusicGain = null;
+                }
+            }
+            // ============================================================
+            // GAME STATE
+            // ============================================================
+            let currentScene = 'farm'; // 'farm' or 'rest'
+            let selectedPlotIndex = -1;
+            let dayNightTime = 0;
+            let particles = [];
+            let farmAnimations = []; // floating text, sparkle bursts etc.
+            let restStartTime = 0;
+            // Initialize soil plots
+            if (!window.gameConfig.soilPlots || window.gameConfig.soilPlots.length === 0) {
+                window.gameConfig.soilPlots = [];
+                for (let i = 0; i < 9; i++) {
+                    window.gameConfig.soilPlots.push({
+                        x: 0, y: 0,
+                        crop: null,
+                        growthStage: 0,
+                        growthTimer: 0
+                    });
+                }
+            }
+            recalculateFarmLayout();
+            // Time of day
+            const timeMap = { morning: 0.2, afternoon: 0.5, evening: 0.75, night: 0.95 };
+            dayNightTime = timeMap[window.gameConfig.atmosphere.timeOfDay] || 0.5;
+            const cycleSpeedMap = { off: 0, slow: 600, normal: 300, fast: 120 };
+            // Crop emoji fallbacks
+            const cropEmoji = {
+                carrot: '🥕', tomato: '🍅', wheat: '🌾', flower: '🌸'
+            };
+            // ============================================================
+            // SHOW GAME PARAMETERS (Editor)
+            // ============================================================
+            if (typeof lib !== 'undefined' && lib.showGameParameters) lib.showGameParameters({
+                name: 'Whispering Meadows',
+                params: {
+                    'Growth Speed': {
+                        key: 'crops.growthSpeedMultiplier',
+                        type: 'slider', min: 0.5, max: 3.0, step: 0.1
+                    },
+                    'Day/Night Cycle': {
+                        key: 'atmosphere.cycleSpeed',
+                        type: 'dropdown',
+                        options: [
+                            { label: 'Off', value: 'off' },
+                            { label: 'Slow', value: 'slow' },
+                            { label: 'Normal', value: 'normal' },
+                            { label: 'Fast', value: 'fast' }
+                        ]
+                    },
+                    'Starting Time': {
+                        key: 'atmosphere.timeOfDay',
+                        type: 'dropdown',
+                        options: [
+                            { label: 'Morning', value: 'morning' },
+                            { label: 'Afternoon', value: 'afternoon' },
+                            { label: 'Evening', value: 'evening' },
+                            { label: 'Night', value: 'night' }
+                        ],
+                        onChange: (v) => { dayNightTime = timeMap[v] || 0.5; }
+                    },
+                    'Particle Density': {
+                        key: 'atmosphere.particleDensity',
+                        type: 'slider', min: 0, max: 2, step: 0.1
+                    },
+                    'Show Tree': { key: 'decorations.tree.visible', type: 'checkbox' },
+                    'Show Fence': { key: 'decorations.fence.visible', type: 'checkbox' },
+                    'Show Flower Patch': { key: 'decorations.flowerPatch.visible', type: 'checkbox' },
+                    'Music Volume': {
+                        key: 'audio.musicVolume',
+                        type: 'slider', min: 0, max: 1, step: 0.1,
+                        onChange: (v) => { if (bgMusicGain) bgMusicGain.gain.value = v; }
+                    },
+                    'SFX Volume': {
+                        key: 'audio.sfxVolume',
+                        type: 'slider', min: 0, max: 1, step: 0.1
+                    }
+                }
+            });
+            // ============================================================
+            // NOTIFICATION TOASTS
+            // ============================================================
+            function showToast(message) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = message;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                }, 2500);
+            }
+            // ============================================================
+            // UI MANAGEMENT
+            // ============================================================
+            const seedPanel = document.getElementById('seed-panel');
+            const inventoryPanel = document.getElementById('inventory-panel');
+            const slotPanel = document.getElementById('slot-panel');
+            const slotList = document.getElementById('slot-list');
+            const restArea = document.getElementById('rest-area');
+            const panelBackdrop = document.getElementById('panel-backdrop');
+            const saveStatusEl = document.getElementById('save-status');
+            function setSaveStatus(text) {
+                if (saveStatusEl) saveStatusEl.textContent = text;
+            }
+            function slotKey(slot) {
+                return 'whisperingMeadowsSaveSlot' + slot;
+            }
+            function readSaveSlot(slot) {
+                if (typeof localStorage === 'undefined') return null;
+                try {
+                    const raw = localStorage.getItem(slotKey(slot));
+                    return raw ? JSON.parse(raw) : null;
+                } catch (err) {
+                    return null;
+                }
+            }
+            function writeSaveSlot(slot, state) {
+                if (typeof localStorage !== 'undefined') {
+                    localStorage.setItem(slotKey(slot), JSON.stringify(state));
+                }
+            }
+            function clearSaveSlot(slot) {
+                if (typeof localStorage !== 'undefined') {
+                    localStorage.removeItem(slotKey(slot));
+                }
+            }
+            function getAllSaveSlots() {
+                const slots = {};
+                for (let i = 1; i <= SAVE_SLOT_COUNT; i++) slots[i] = readSaveSlot(i);
+                return slots;
+            }
+            function pickSaveSlot() {
+                if (activeSaveSlot) return activeSaveSlot;
+                for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
+                    if (!readSaveSlot(i)) return i;
+                }
+                return 1;
+            }
+            function getSaveState() {
+                return {
+                    version: 1,
+                    slot: activeSaveSlot,
+                    player: window.gameConfig.player,
+                    farm: window.gameConfig.farm,
+                    pet: window.gameConfig.pet,
+                    inventory: window.gameConfig.inventory,
+                    soilPlots: window.gameConfig.soilPlots,
+                    atmosphere: window.gameConfig.atmosphere,
+                    gameDay: window.gameConfig.gameDay,
+                    savedAt: Date.now()
+                };
+            }
+            async function saveGame(reason) {
+                if (saveInFlight) {
+                    saveDirty = true;
+                    return;
+                }
+                saveInFlight = true;
+                setSaveStatus(reason === 'auto' ? 'Autosaving...' : 'Saving...');
+                activeSaveSlot = pickSaveSlot();
+                const state = getSaveState();
+                try {
+                    writeSaveSlot(activeSaveSlot, state);
+                    if (typeof lib !== 'undefined' && lib.saveUserGameState) {
+                        await lib.saveUserGameState({
+                            activeSaveSlot,
+                            slots: getAllSaveSlots()
+                        });
+                    }
+                    saveDirty = false;
+                    setSaveStatus((reason === 'auto' ? 'Autosaved' : 'Saved') + ' S' + activeSaveSlot);
+                    if (reason !== 'auto') showToast('Game saved 💾');
+                } catch (err) {
+                    setSaveStatus('Save failed');
+                    gameLog('Save failed: ' + (err && err.message ? err.message : err));
+                    if (reason !== 'auto') showToast('Save failed');
+                } finally {
+                    saveInFlight = false;
+                }
+            }
+            function markSaveDirty(reason) {
+                saveDirty = true;
+                if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+                saveDebounceTimer = setTimeout(() => {
+                    if (gameStarted && saveDirty) void saveGame(reason || 'auto');
+                }, 1400);
+            }
+            function startAutoSave() {
+                if (autoSaveTimer) return;
+                setSaveStatus('Autosave S' + pickSaveSlot());
+                autoSaveTimer = setInterval(() => {
+                    if (gameStarted && saveDirty) void saveGame('auto');
+                }, 30000);
+            }
+            function stopAutoSave() {
+                if (autoSaveTimer) {
+                    clearInterval(autoSaveTimer);
+                    autoSaveTimer = null;
+                }
+            }
+            function syncBackdrop() {
+                const needsBackdrop = inventoryPanel.classList.contains('active') || slotPanel.classList.contains('active');
+                panelBackdrop.classList.toggle('active', needsBackdrop);
+            }
+            function closeSeedPanel(silent) {
+                const wasActive = seedPanel.classList.contains('active');
+                seedPanel.classList.remove('active');
+                selectedPlotIndex = -1;
+                if (wasActive && !silent) playSound('sfx_ui_close', window.gameConfig.audio.sfxVolume);
+            }
+            function closeInventory(silent) {
+                const wasActive = inventoryPanel.classList.contains('active');
+                inventoryPanel.classList.remove('active');
+                syncBackdrop();
+                if (wasActive && !silent) playSound('sfx_ui_close', window.gameConfig.audio.sfxVolume);
+            }
+            function closeSlotPanel(silent) {
+                const wasActive = slotPanel.classList.contains('active');
+                slotPanel.classList.remove('active');
+                slotPanel.setAttribute('aria-hidden', 'true');
+                syncBackdrop();
+                if (wasActive && !silent) playSound('sfx_ui_close', window.gameConfig.audio.sfxVolume);
+            }
+            function closeGameplayPanels(silent) {
+                closeSeedPanel(true);
+                closeInventory(true);
+                closeSlotPanel(true);
+                if (!silent) playSound('sfx_ui_close', window.gameConfig.audio.sfxVolume);
+            }
+            function openSeedPanel(plotIndex) {
+                closeInventory(true);
+                closeSlotPanel(true);
+                selectedPlotIndex = plotIndex;
+                const seedGrid = document.getElementById('seed-grid');
+                seedGrid.innerHTML = '';
+                window.gameConfig.crops.available.forEach(cropType => {
+                    const seedCount = window.gameConfig.inventory.seeds[cropType] || 0;
+                    const item = document.createElement('div');
+                    item.className = 'seed-item' + (seedCount <= 0 ? ' disabled' : '');
+                    const img = document.createElement('img');
+                    const asset = assetCache[`${cropType}_seed`];
+                    if (asset) {
+                        img.src = asset.img.src;
+                    } else {
+                        img.alt = cropEmoji[cropType] || '🌱';
+                        img.style.fontSize = '48px';
+                    }
+                    const nameEl = document.createElement('div');
+                    nameEl.className = 'seed-item-name';
+                    nameEl.textContent = cropType;
+                    const countEl = document.createElement('div');
+                    countEl.className = 'seed-item-count';
+                    countEl.textContent = `×${seedCount}`;
+                    item.appendChild(img);
+                    item.appendChild(nameEl);
+                    item.appendChild(countEl);
+                    if (seedCount > 0) {
+                        item.addEventListener('click', () => {
+                            plantSeed(plotIndex, cropType);
+                            closeSeedPanel();
+                        });
+                    }
+                    seedGrid.appendChild(item);
+                });
+                seedPanel.classList.add('active');
+                syncBackdrop();
+                playSound('sfx_ui_open', window.gameConfig.audio.sfxVolume);
+            }
+            function toggleInventory() {
+                const isActive = inventoryPanel.classList.contains('active');
+                if (isActive) {
+                    closeInventory();
+                } else {
+                    closeSeedPanel(true);
+                    closeSlotPanel(true);
+                    updateInventoryDisplay();
+                    inventoryPanel.classList.add('active');
+                    syncBackdrop();
+                    playSound('sfx_ui_open', window.gameConfig.audio.sfxVolume);
+                }
+            }
+            function openGameMenu() {
+                void saveGame('manual').finally(returnToMainMenu);
+            }
+            async function saveAndStay(reason) {
+                await saveGame(reason || 'manual');
+            }
+            function returnToMainMenu() {
+                closeGameplayPanels(true);
+                stopAutoSave();
+                menuTransitioning = false;
+                gameStarted = false;
+                canvas.style.pointerEvents = 'none';
+                const ui = document.getElementById('ui-overlay');
+                if (ui) ui.style.display = 'none';
+                restArea.classList.remove('active');
+                currentScene = 'farm';
+                const screen = startScreenEl || document.getElementById('start-screen');
+                if (screen) {
+                    screen.classList.remove('hidden');
+                    screen.classList.remove('hiding');
+                }
+                setupMainMenu();
+            }
+            function applySaveState(state) {
+                if (!state) return false;
+                if (state.inventory) {
+                    window.gameConfig.inventory = Object.assign({}, window.gameConfig.inventory, state.inventory);
+                    window.gameConfig.inventory.seeds = Object.assign({}, DEFAULT_GAME_CONFIG.inventory.seeds, window.gameConfig.inventory.seeds || {});
+                    window.gameConfig.inventory.harvested = Object.assign({}, DEFAULT_GAME_CONFIG.inventory.harvested, window.gameConfig.inventory.harvested || {});
+                }
+                if (state.player) window.gameConfig.player = Object.assign({}, window.gameConfig.player, state.player);
+                if (state.farm) window.gameConfig.farm = Object.assign({}, window.gameConfig.farm, state.farm);
+                if (state.pet) window.gameConfig.pet = Object.assign({}, window.gameConfig.pet, state.pet);
+                if (state.soilPlots) window.gameConfig.soilPlots = state.soilPlots;
+                if (state.atmosphere) {
+                    window.gameConfig.atmosphere = Object.assign({}, window.gameConfig.atmosphere, state.atmosphere);
+                    dayNightTime = timeMap[window.gameConfig.atmosphere.timeOfDay] || 0.5;
+                }
+                if (state.gameDay) window.gameConfig.gameDay = state.gameDay;
+                recalculateFarmLayout();
+                updateHarvestCounter();
+                updateGameDayDisplay();
+                updateTimeDisplay();
+                return true;
+            }
+            function slotMetaText(state) {
+                if (!state) return 'Empty slot';
+                const farm = state.farm && state.farm.name ? state.farm.name : 'Meadow Home';
+                const player = state.player && state.player.name ? state.player.name : 'Player';
+                const day = state.gameDay || 1;
+                const pet = state.pet && state.pet.name ? state.pet.name : 'Pet';
+                return `${farm} • ${player} • Day ${day} • ${pet}`;
+            }
+            function renderSaveSlots() {
+                slotList.innerHTML = '';
+                for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
+                    const state = readSaveSlot(i);
+                    const card = document.createElement('div');
+                    card.className = 'slot-card';
+                    const info = document.createElement('div');
+                    const title = document.createElement('div');
+                    title.className = 'slot-title';
+                    title.textContent = `Slot ${i}`;
+                    const meta = document.createElement('div');
+                    meta.className = 'slot-meta';
+                    meta.textContent = slotMetaText(state);
+                    info.appendChild(title);
+                    info.appendChild(meta);
+                    const actions = document.createElement('div');
+                    actions.className = 'slot-actions';
+                    const loadBtn = document.createElement('button');
+                    loadBtn.type = 'button';
+                    loadBtn.className = 'slot-action-btn';
+                    loadBtn.textContent = state ? 'Load' : 'Empty';
+                    loadBtn.disabled = !state;
+                    loadBtn.addEventListener('click', () => loadSaveSlot(i));
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'slot-action-btn delete';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.disabled = !state;
+                    deleteBtn.addEventListener('click', () => deleteSaveSlot(i));
+                    actions.appendChild(loadBtn);
+                    actions.appendChild(deleteBtn);
+                    card.appendChild(info);
+                    card.appendChild(actions);
+                    slotList.appendChild(card);
+                }
+            }
+            function openSaveSlots() {
+                closeStarterSetup();
+                closeMenuSettings();
+                renderSaveSlots();
+                slotPanel.classList.add('active');
+                slotPanel.setAttribute('aria-hidden', 'false');
+                syncBackdrop();
+                playSound('sfx_ui_open', window.gameConfig.audio.sfxVolume);
+            }
+            function loadSaveSlot(slot) {
+                const state = readSaveSlot(slot);
+                if (!state) return;
+                activeSaveSlot = slot;
+                if (applySaveState(state)) {
+                    closeSlotPanel(true);
+                    hideMenuAndStart();
+                }
+            }
+            function deleteSaveSlot(slot) {
+                clearSaveSlot(slot);
+                if (activeSaveSlot === slot) activeSaveSlot = null;
+                renderSaveSlots();
+                void checkForSavedGame().catch(() => {});
+            }
+            function getPetEmoji() {
+                const type = window.gameConfig.pet.type || 'bunny';
+                return type === 'cat' ? '🐱' :
+                       type === 'dog' ? '🐶' :
+                       type === 'bird' ? '🐦' : '🐰';
+            }
+            function updateInventoryDisplay() {
+                const seedsInv = document.getElementById('seeds-inventory');
+                const harvestInv = document.getElementById('harvested-inventory');
+                seedsInv.innerHTML = '';
+                harvestInv.innerHTML = '';
+                const crops = window.gameConfig.crops.available;
+                crops.forEach(type => {
+                    const count = window.gameConfig.inventory.seeds[type] || 0;
+                    seedsInv.appendChild(makeInventoryItem(type, count, 'seed'));
+                });
+                let hasHarvested = false;
+                crops.forEach(type => {
+                    const count = window.gameConfig.inventory.harvested[type] || 0;
+                    if (count > 0) hasHarvested = true;
+                    harvestInv.appendChild(makeInventoryItem(type, count, 'mature'));
+                });
+                if (!hasHarvested) {
+                    const empty = document.createElement('div');
+                    empty.className = 'inventory-empty';
+                    empty.textContent = 'Nothing here yet! Start planting 🌱';
+                    empty.style.gridColumn = '1 / -1';
+                    harvestInv.appendChild(empty);
+                }
+            }
+            function makeInventoryItem(cropType, count, stage) {
+                const item = document.createElement('div');
+                item.className = 'inventory-item';
+                const img = document.createElement('img');
+                const asset = assetCache[`${cropType}_${stage}`];
+                if (asset) {
+                    img.src = asset.img.src;
+                } else {
+                    img.alt = cropEmoji[cropType] || '🌱';
+                }
+                const info = document.createElement('div');
+                info.className = 'inventory-item-info';
+                const name = document.createElement('div');
+                name.className = 'inventory-item-name';
+                name.textContent = cropType;
+                const countEl = document.createElement('div');
+                countEl.className = 'inventory-item-count';
+                countEl.textContent = `×${count}`;
+                info.appendChild(name);
+                info.appendChild(countEl);
+                item.appendChild(img);
+                item.appendChild(info);
+                return item;
+            }
+            function updateHarvestCounter() {
+                let total = 0;
+                const harvested = window.gameConfig.inventory.harvested;
+                for (const key in harvested) {
+                    total += harvested[key] || 0;
+                }
+                const coinEl = document.getElementById('coin-total');
+                if (coinEl) coinEl.textContent = total;
+                updateHotbar();
+            }
+            function updateHotbar() {
+                const seeds = window.gameConfig.inventory.seeds;
+                document.querySelectorAll('.hotbar-count').forEach(el => {
+                    const crop = el.dataset.count;
+                    const n = seeds[crop] || 0;
+                    el.textContent = n;
+                    const slot = el.closest('.hotbar-slot');
+                    if (slot) {
+                        slot.classList.toggle('disabled', n <= 0);
+                        if (n <= 0 && selectedHotbarCrop === crop) {
+                            selectedHotbarCrop = null;
+                            slot.classList.remove('selected');
+                        }
+                    }
+                });
+            }
+            function updateGameDayDisplay() {
+                const el = document.getElementById('game-day');
+                if (el) el.textContent = window.gameConfig.gameDay || 1;
+                const farmEl = document.getElementById('farm-name-label');
+                if (farmEl) farmEl.textContent = window.gameConfig.farm.name || 'Meadow Home';
+            }
+            function setupHotbar() {
+                document.querySelectorAll('.hotbar-slot[data-crop]').forEach(slot => {
+                    slot.addEventListener('click', () => {
+                        const crop = slot.dataset.crop;
+                        const count = window.gameConfig.inventory.seeds[crop] || 0;
+                        if (count <= 0) {
+                            showToast(`No ${crop} seeds left 🌱`);
+                            return;
+                        }
+                        if (selectedHotbarCrop === crop) {
+                            selectedHotbarCrop = null;
+                            slot.classList.remove('selected');
+                        } else {
+                            selectedHotbarCrop = crop;
+                            document.querySelectorAll('.hotbar-slot[data-crop]').forEach(s => s.classList.remove('selected'));
+                            slot.classList.add('selected');
+                            showToast(`${cropEmoji[crop] || '🌱'} ${crop} selected — tap a soil plot`);
+                        }
+                    });
+                });
+                document.getElementById('hotbar-water').addEventListener('click', () => {
+                    showToast('A gentle sprinkle… take your time 💧');
+                });
+                updateHotbar();
+                updateGameDayDisplay();
+            }
+            // Rest area
+            let restAmbientSource = null;
+            function transitionToRestArea() {
+                closeGameplayPanels(true);
+                currentScene = 'rest';
+                restArea.classList.add('active');
+                restStartTime = Date.now();
+                stopBgMusic();
+                playSound('ambient_rest_area', window.gameConfig.audio.ambientVolume, true)
+                    .then(r => { if (r) restAmbientSource = r.source; });
+                // Animate rest message
+                const msg = document.getElementById('rest-message');
+                const messages = [
+                    'A peaceful place to rest...',
+                    'Let the worries drift away...',
+                    'The meadows whisper softly...',
+                    'Take all the time you need...'
+                ];
+                msg.textContent = messages[Math.floor(Math.random() * messages.length)];
+            }
+            function returnToFarm() {
+                currentScene = 'farm';
+                restArea.classList.remove('active');
+                if (restAmbientSource) {
+                    try { restAmbientSource.stop(); } catch(e) {}
+                    restAmbientSource = null;
+                }
+                startBgMusic();
+            }
+            // ============================================================
+            // MAIN MENU
+            // ============================================================
+            const startScreenEl = document.getElementById('start-screen');
+            const menuParticlesCanvas = document.getElementById('menu-particles');
+            const menuParticlesCtx = menuParticlesCanvas.getContext('2d');
+            const menuToastEl = document.getElementById('menu-toast');
+            const menuSettingsPanel = document.getElementById('menu-settings-panel');
+            const starterPanel = document.getElementById('starter-panel');
+            const continueBtn = document.getElementById('continue-button');
+            let menuParticles = [];
+            let menuParticleFrame = null;
+            let hasSavedGame = false;
+            let menuMusicMuted = false;
+            let menuResizeBound = false;
+
+            function resizeMenuParticles() {
+                const rect = startScreenEl.getBoundingClientRect();
+                menuParticlesCanvas.width = rect.width;
+                menuParticlesCanvas.height = rect.height;
+            }
+
+            function initMenuParticles() {
+                resizeMenuParticles();
+                menuParticles = Array.from({ length: 24 }, () => ({
+                    x: Math.random() * menuParticlesCanvas.width,
+                    y: Math.random() * menuParticlesCanvas.height * 0.85,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: -4 - Math.random() * 10,
+                    size: 2 + Math.random() * 3,
+                    alpha: 0.2 + Math.random() * 0.4,
+                    phase: Math.random() * Math.PI * 2
+                }));
+            }
+
+            function renderMenuParticles() {
+                if (startScreenEl.classList.contains('hidden')) return;
+                const w = menuParticlesCanvas.width;
+                const h = menuParticlesCanvas.height;
+                menuParticlesCtx.clearRect(0, 0, w, h);
+                const t = Date.now() * 0.001;
+                menuParticles.forEach(p => {
+                    p.x += p.vx * 0.016;
+                    p.y += p.vy * 0.016;
+                    p.phase += 0.02;
+                    if (p.y < -10) {
+                        p.y = h * 0.7 + Math.random() * h * 0.25;
+                        p.x = w * 0.25 + Math.random() * w * 0.5;
+                    }
+                    if (p.x < 0) p.x = w;
+                    if (p.x > w) p.x = 0;
+                    const a = p.alpha * (0.6 + 0.4 * Math.sin(t + p.phase));
+                    menuParticlesCtx.beginPath();
+                    menuParticlesCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    menuParticlesCtx.fillStyle = `rgba(255, 240, 200, ${a})`;
+                    menuParticlesCtx.fill();
+                });
+                menuParticleFrame = requestAnimationFrame(renderMenuParticles);
+            }
+
+            function showMenuToast(message) {
+                menuToastEl.textContent = message;
+                menuToastEl.classList.add('visible');
+                clearTimeout(showMenuToast._timer);
+                showMenuToast._timer = setTimeout(() => menuToastEl.classList.remove('visible'), 2800);
+            }
+
+            function openMenuSettings() {
+                menuSettingsPanel.classList.add('active');
+                menuSettingsPanel.setAttribute('aria-hidden', 'false');
+            }
+
+            function closeMenuSettings() {
+                menuSettingsPanel.classList.remove('active');
+                menuSettingsPanel.setAttribute('aria-hidden', 'true');
+            }
+            function openStarterSetup() {
+                closeMenuSettings();
+                syncStarterForm();
+                starterPanel.classList.add('active');
+                starterPanel.setAttribute('aria-hidden', 'false');
+            }
+            function closeStarterSetup() {
+                starterPanel.classList.remove('active');
+                starterPanel.setAttribute('aria-hidden', 'true');
+            }
+            function syncStarterForm() {
+                document.getElementById('starter-player-name').value = window.gameConfig.player.name || 'Mellow';
+                document.getElementById('starter-farm-name').value = window.gameConfig.farm.name || 'Meadow Home';
+                document.getElementById('starter-shirt-color').value = window.gameConfig.player.shirtColor || '#FFFFFF';
+                document.getElementById('starter-clothes-color').value = window.gameConfig.player.clothesColor || '#5B8BD4';
+                document.getElementById('starter-pet-type').value = window.gameConfig.pet.type || 'bunny';
+                document.getElementById('starter-pet-name').value = window.gameConfig.pet.name || 'Clover';
+            }
+            function applyStarterForm() {
+                window.gameConfig.player.name = (document.getElementById('starter-player-name').value || 'Mellow').trim().slice(0, 18);
+                window.gameConfig.farm.name = (document.getElementById('starter-farm-name').value || 'Meadow Home').trim().slice(0, 22);
+                window.gameConfig.player.shirtColor = document.getElementById('starter-shirt-color').value || '#FFFFFF';
+                window.gameConfig.player.clothesColor = document.getElementById('starter-clothes-color').value || '#5B8BD4';
+                window.gameConfig.pet.type = document.getElementById('starter-pet-type').value || 'bunny';
+                window.gameConfig.pet.name = (document.getElementById('starter-pet-name').value || 'Clover').trim().slice(0, 18);
+                updateGameDayDisplay();
+            }
+            function startNewGameFromSetup() {
+                applyStarterForm();
+                activeSaveSlot = pickSaveSlot();
+                window.gameConfig.inventory = {
+                    seeds: Object.assign({}, DEFAULT_GAME_CONFIG.inventory.seeds),
+                    harvested: Object.assign({}, DEFAULT_GAME_CONFIG.inventory.harvested)
+                };
+                window.gameConfig.gameDay = 1;
+                window.gameConfig.soilPlots = [];
+                for (let i = 0; i < 9; i++) {
+                    window.gameConfig.soilPlots.push({
+                        x: 0, y: 0,
+                        crop: null,
+                        growthStage: 0,
+                        growthTimer: 0
+                    });
+                }
+                recalculateFarmLayout();
+                updateHarvestCounter();
+                updateGameDayDisplay();
+                closeStarterSetup();
+                markSaveDirty('auto');
+                hideMenuAndStart();
+            }
+
+            function syncMenuSlidersFromConfig() {
+                const musicPct = Math.round((window.gameConfig.audio.musicVolume || 0.5) * 100);
+                const sfxPct = Math.round((window.gameConfig.audio.sfxVolume || 0.7) * 100);
+                document.getElementById('menu-music-slider').value = musicPct;
+                document.getElementById('menu-sfx-slider').value = sfxPct;
+                document.getElementById('menu-music-val').textContent = musicPct + '%';
+                document.getElementById('menu-sfx-val').textContent = sfxPct + '%';
+            }
+
+            let menuTransitioning = false;
+            function hideMenuAndStart() {
+                if (menuTransitioning) return;
+                menuTransitioning = true;
+                closeMenuSettings();
+                startScreenEl.classList.add('hiding');
+                if (menuParticleFrame) {
+                    cancelAnimationFrame(menuParticleFrame);
+                    menuParticleFrame = null;
+                }
+                setTimeout(() => beginPlaySession(), 800);
+            }
+
+            function onMenuButtonActivate(handler) {
+                return (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handler();
+                };
+            }
+
+            function attachMenuHandlers() {
+                const startBtn = document.getElementById('start-button');
+                const continueButton = document.getElementById('continue-button');
+                const settingsBtn = document.getElementById('menu-settings-btn');
+                const settingsCorner = document.getElementById('menu-settings-corner');
+                const settingsClose = document.getElementById('menu-settings-close');
+                const musicToggle = document.getElementById('menu-music-toggle');
+
+                startBtn.addEventListener('click', onMenuButtonActivate(openStarterSetup));
+                continueButton.addEventListener('click', onMenuButtonActivate(openSaveSlots));
+                settingsBtn.addEventListener('click', onMenuButtonActivate(openMenuSettings));
+                settingsCorner.addEventListener('click', onMenuButtonActivate(openMenuSettings));
+                settingsClose.addEventListener('click', onMenuButtonActivate(closeMenuSettings));
+                document.getElementById('starter-begin-button').addEventListener('click', onMenuButtonActivate(startNewGameFromSetup));
+                document.getElementById('starter-cancel-button').addEventListener('click', onMenuButtonActivate(closeStarterSetup));
+                document.getElementById('slot-close-button').addEventListener('click', onMenuButtonActivate(() => closeSlotPanel()));
+                menuSettingsPanel.addEventListener('click', (e) => {
+                    if (e.target === menuSettingsPanel) closeMenuSettings();
+                });
+                musicToggle.addEventListener('click', onMenuButtonActivate(() => {
+                    menuMusicMuted = !menuMusicMuted;
+                    if (bgMusicGain) bgMusicGain.gain.value = menuMusicMuted ? 0 : window.gameConfig.audio.musicVolume;
+                    musicToggle.textContent = menuMusicMuted ? '🔇' : '🎵';
+                }));
+                document.getElementById('menu-music-slider').addEventListener('input', (e) => {
+                    const v = Number(e.target.value) / 100;
+                    window.gameConfig.audio.musicVolume = v;
+                    document.getElementById('menu-music-val').textContent = e.target.value + '%';
+                    if (bgMusicGain) bgMusicGain.gain.value = menuMusicMuted ? 0 : v;
+                });
+                document.getElementById('menu-sfx-slider').addEventListener('input', (e) => {
+                    const v = Number(e.target.value) / 100;
+                    window.gameConfig.audio.sfxVolume = v;
+                    document.getElementById('menu-sfx-val').textContent = e.target.value + '%';
+                });
+            }
+            attachMenuHandlers();
+
+            async function checkForSavedGame() {
+                try {
+                    hasSavedGame = false;
+                    for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
+                        if (readSaveSlot(i)) hasSavedGame = true;
+                    }
+                    continueBtn.disabled = false;
+                } catch (e) {
+                    hasSavedGame = false;
+                    continueBtn.disabled = false;
+                }
+            }
+
+            function setupMainMenu() {
+                try {
+                    syncMenuSlidersFromConfig();
+                    void checkForSavedGame().catch(() => {});
+                    if (menuParticleFrame) {
+                        cancelAnimationFrame(menuParticleFrame);
+                        menuParticleFrame = null;
+                    }
+                    initMenuParticles();
+                    renderMenuParticles();
+                    if (!menuResizeBound) {
+                        menuResizeBound = true;
+                        window.addEventListener('resize', () => {
+                            if (!startScreenEl.classList.contains('hidden')) {
+                                resizeMenuParticles();
+                            }
+                        });
+                    }
+                } catch (err) {
+                    gameLog('Menu setup: ' + (err && err.message ? err.message : err));
+                    console.error('[Whispering Meadows] setupMainMenu:', err);
+                }
+            }
+
+            // ============================================================
+            // EVENT LISTENERS
+            // ============================================================
+            document.getElementById('close-seed-panel').addEventListener('click', () => closeSeedPanel());
+            document.getElementById('inventory-button').addEventListener('click', toggleInventory);
+            setupHotbar();
+            document.getElementById('close-inventory-panel').addEventListener('click', toggleInventory);
+            document.getElementById('rest-button').addEventListener('click', transitionToRestArea);
+            document.getElementById('return-button').addEventListener('click', returnToFarm);
+            document.getElementById('quick-save-button').addEventListener('click', () => void saveAndStay('manual'));
+            document.getElementById('game-menu-button').addEventListener('click', openGameMenu);
+            panelBackdrop.addEventListener('click', () => {
+                if (slotPanel.classList.contains('active')) closeSlotPanel();
+                closeInventory();
+            });
+
+            // ============================================================
+            // GAMEPLAY
+            // ============================================================
+            function plantSeed(plotIndex, cropType) {
+                const plot = window.gameConfig.soilPlots[plotIndex];
+                const seedCount = window.gameConfig.inventory.seeds[cropType] || 0;
+                if (seedCount > 0 && plot.growthStage === 0) {
+                    plot.crop = cropType;
+                    plot.growthStage = 1;
+                    plot.growthTimer = 0;
+                    window.gameConfig.inventory.seeds[cropType]--;
+                    playSound('sfx_plant_seed', window.gameConfig.audio.sfxVolume);
+                    showToast(`${cropEmoji[cropType] || '🌱'} ${cropType} planted!`);
+                    // Plant animation
+                    farmAnimations.push({
+                        type: 'plantDrop',
+                        x: plot.x + PLOT_SIZE / 2,
+                        y: plot.y,
+                        startY: plot.y - 30,
+                        timer: 0,
+                        duration: 400
+                    });
+                    updateHotbar();
+                    markSaveDirty('auto');
+                }
+            }
+            function harvestCrop(plotIndex) {
+                const plot = window.gameConfig.soilPlots[plotIndex];
+                if (plot.growthStage === 3 && plot.crop) {
+                    const crop = plot.crop;
+                    window.gameConfig.inventory.harvested[crop] = (window.gameConfig.inventory.harvested[crop] || 0) + 1;
+                    // Harvest burst animation
+                    farmAnimations.push({
+                        type: 'harvestBurst',
+                        x: plot.x + PLOT_SIZE / 2,
+                        y: plot.y + PLOT_SIZE / 2,
+                        timer: 0,
+                        duration: 600,
+                        crop: crop,
+                        particles: Array.from({ length: 8 }, () => ({
+                            angle: Math.random() * Math.PI * 2,
+                            speed: 40 + Math.random() * 60,
+                            size: 4 + Math.random() * 4
+                        }))
+                    });
+                    // Floating text
+                    farmAnimations.push({
+                        type: 'floatText',
+                        x: plot.x + PLOT_SIZE / 2,
+                        y: plot.y,
+                        text: `+1 ${cropEmoji[crop] || ''}`,
+                        timer: 0,
+                        duration: 1000
+                    });
+                    plot.crop = null;
+                    plot.growthStage = 0;
+                    plot.growthTimer = 0;
+                    playSound('sfx_harvest_crop', window.gameConfig.audio.sfxVolume);
+                    showToast(`${cropEmoji[crop] || '🌾'} Harvested ${crop}!`);
+                    updateHarvestCounter();
+                    markSaveDirty('auto');
+                }
+            }
+            // ============================================================
+            // INPUT HANDLING
+            // ============================================================
+            function getCanvasCoords(event) {
+                const rect = canvas.getBoundingClientRect();
+                const sx = canvas.width / rect.width;
+                const sy = canvas.height / rect.height;
+                let cx, cy;
+                if (event.touches && event.touches.length > 0) {
+                    cx = event.touches[0].clientX;
+                    cy = event.touches[0].clientY;
+                } else {
+                    cx = event.clientX;
+                    cy = event.clientY;
+                }
+                return {
+                    x: (cx - rect.left) * sx,
+                    y: (cy - rect.top) * sy
+                };
+            }
+            let lastClickTime = 0;
+            function handleCanvasClick(e) {
+                if (currentMode !== 'play' || !gameStarted || currentScene !== 'farm') return;
+                if (seedPanel.classList.contains('active') || inventoryPanel.classList.contains('active') || slotPanel.classList.contains('active')) return;
+                if (Date.now() - lastClickTime < 200) return;
+                lastClickTime = Date.now();
+                const c = getCanvasCoords(e);
+                // Check pet click
+                const petDist = Math.sqrt(
+                    (c.x - petPos.x) * (c.x - petPos.x) +
+                    (c.y - petPos.y) * (c.y - petPos.y)
+                );
+                if (petDist < 40) {
+                    farmAnimations.push({
+                        type: 'heart',
+                        x: petPos.x,
+                        y: petPos.y - 30,
+                        timer: 0,
+                        duration: 800
+                    });
+                    return;
+                }
+                let handledPlot = false;
+                // Check soil plots
+                window.gameConfig.soilPlots.forEach((plot, idx) => {
+                    if (c.x >= plot.x && c.x <= plot.x + PLOT_SIZE &&
+                        c.y >= plot.y && c.y <= plot.y + PLOT_SIZE) {
+                        handledPlot = true;
+                        if (plot.growthStage === 0) {
+                            if (selectedHotbarCrop) {
+                                plantSeed(idx, selectedHotbarCrop);
+                            } else {
+                                openSeedPanel(idx);
+                            }
+                        } else if (plot.growthStage === 3) {
+                            harvestCrop(idx);
+                        }
+                    }
+                });
+                if (!handledPlot) {
+                    playerTarget = {
+                        x: Math.max(FARM_X + 24, Math.min(FARM_X + FARM_WIDTH - 24, c.x)),
+                        y: Math.max(FARM_Y + 24, Math.min(FARM_Y + FARM_HEIGHT - 24, c.y))
+                    };
+                }
+            }
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                handleCanvasClick(e);
+            });
+            function setMoveKey(key, down) {
+                const k = String(key || '').toLowerCase();
+                if (k === 'w' || k === 'arrowup') playerInput.up = down;
+                if (k === 's' || k === 'arrowdown') playerInput.down = down;
+                if (k === 'a' || k === 'arrowleft') playerInput.left = down;
+                if (k === 'd' || k === 'arrowright') playerInput.right = down;
+            }
+            document.addEventListener('keydown', (e) => {
+                setMoveKey(e.key, true);
+            });
+            document.addEventListener('keyup', (e) => {
+                setMoveKey(e.key, false);
+            });
+            // ============================================================
+            // UPDATE LOGIC
+            // ============================================================
+            let lastTime = performance.now();
+            function update(dt) {
+                if (!gameStarted && currentMode === 'play') return;
+                // Clamp delta to avoid huge jumps (tab switch)
+                dt = Math.min(dt, 100);
+                // Crop growth
+                const growthSpeed = window.gameConfig.crops.growthSpeedMultiplier;
+                const growthTime = 30000; // 30s per stage at 1x
+                window.gameConfig.soilPlots.forEach(plot => {
+                    if (plot.growthStage > 0 && plot.growthStage < 3) {
+                        plot.growthTimer += dt * growthSpeed;
+                        if (plot.growthTimer >= growthTime) {
+                            plot.growthTimer = 0;
+                            plot.growthStage++;
+                        }
+                    }
+                });
+                // Day/night cycle
+                const cycleDur = cycleSpeedMap[window.gameConfig.atmosphere.cycleSpeed];
+                if (cycleDur > 0) {
+                    const prev = dayNightTime;
+                    dayNightTime += dt / (cycleDur * 1000);
+                    if (dayNightTime > 1) {
+                        dayNightTime -= 1;
+                        if (prev > 0.9) {
+                            window.gameConfig.gameDay = (window.gameConfig.gameDay || 1) + 1;
+                            updateGameDayDisplay();
+                            markSaveDirty('auto');
+                        }
+                    }
+                }
+                updateTimeDisplay();
+                updatePlayer(dt);
+                playerBob += dt * 0.004;
+                updatePet(dt);
+                updateParticles(dt);
+                updateFarmAnimations(dt);
+                // Night pulse on rest button
+                const restBtn = document.getElementById('rest-button');
+                if (dayNightTime > 0.75 || dayNightTime < 0.1) {
+                    restBtn.classList.add('pulse');
+                } else {
+                    restBtn.classList.remove('pulse');
+                }
+                // Rest timer
+                if (currentScene === 'rest') {
+                    const elapsed = Math.floor((Date.now() - restStartTime) / 1000);
+                    const min = Math.floor(elapsed / 60);
+                    const sec = elapsed % 60;
+                    document.getElementById('rest-timer').textContent =
+                        `Resting for ${min}:${sec.toString().padStart(2, '0')}`;
+                }
+            }
+            function updateTimeDisplay() {
+                const icon = document.getElementById('time-icon');
+                const text = document.getElementById('time-text');
+                if (dayNightTime < 0.25) {
+                    icon.textContent = '🌅';
+                    text.textContent = 'Morning';
+                } else if (dayNightTime < 0.5) {
+                    icon.textContent = '☀️';
+                    text.textContent = 'Afternoon';
+                } else if (dayNightTime < 0.75) {
+                    icon.textContent = '🌇';
+                    text.textContent = 'Evening';
+                } else {
+                    icon.textContent = '🌙';
+                    text.textContent = 'Night';
+                }
+            }
+            function updatePlayer(dt) {
+                const speed = 155 * Math.max(0.75, FARM_WIDTH / 720);
+                let dx = 0;
+                let dy = 0;
+                if (playerInput.up) dy -= 1;
+                if (playerInput.down) dy += 1;
+                if (playerInput.left) dx -= 1;
+                if (playerInput.right) dx += 1;
+                if (dx || dy) {
+                    playerTarget = null;
+                    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                    playerPos.x += (dx / len) * speed * dt / 1000;
+                    playerPos.y += (dy / len) * speed * dt / 1000;
+                } else if (playerTarget) {
+                    dx = playerTarget.x - playerPos.x;
+                    dy = playerTarget.y - playerPos.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 5) {
+                        playerTarget = null;
+                    } else {
+                        const move = Math.min(speed * dt / 1000, dist);
+                        playerPos.x += (dx / dist) * move;
+                        playerPos.y += (dy / dist) * move;
+                    }
+                }
+                playerPos.x = Math.max(FARM_X + 24, Math.min(FARM_X + FARM_WIDTH - 24, playerPos.x));
+                playerPos.y = Math.max(FARM_Y + 24, Math.min(FARM_Y + FARM_HEIGHT - 24, playerPos.y));
+                PLAYER_X = playerPos.x;
+                PLAYER_Y = playerPos.y;
+            }
+            function updatePet(dt) {
+                if (!petTarget || petWaypoints.length === 0) return;
+                // Idle bounce
+                petBounce += dt * 0.005;
+                // Pause at waypoint
+                if (petPauseTimer > 0) {
+                    petPauseTimer -= dt;
+                    return;
+                }
+                const speed = (window.gameConfig.pet.speed || 1) * 45;
+                const dx = petTarget.x - petPos.x;
+                const dy = petTarget.y - petPos.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 8) {
+                    petPauseTimer = 800 + Math.random() * 1500;
+                    petWaypointIdx = (petWaypointIdx + 1) % petWaypoints.length;
+                    petTarget = petWaypoints[petWaypointIdx];
+                } else {
+                    const move = Math.min(speed * dt / 1000, dist);
+                    petPos.x += (dx / dist) * move;
+                    petPos.y += (dy / dist) * move;
+                }
+            }
+            function updateParticles(dt) {
+                const density = window.gameConfig.atmosphere.particleDensity || 1;
+                const maxP = Math.floor(18 * density);
+                // Remove dead
+                particles = particles.filter(p => p.life > 0);
+                // Spawn
+                while (particles.length < maxP) {
+                    spawnParticle();
+                }
+                // Update
+                particles.forEach(p => {
+                    p.x += p.vx * dt / 1000;
+                    p.y += p.vy * dt / 1000;
+                    p.life -= dt / 1000;
+                    p.wobble += dt * 0.003;
+                    // Wrap
+                    if (p.x < -20) p.x = canvas.width + 20;
+                    if (p.x > canvas.width + 20) p.x = -20;
+                    if (p.y < -20) p.y = canvas.height + 20;
+                    if (p.y > canvas.height + 20) p.y = -20;
+                });
+            }
+            function spawnParticle() {
+                let type;
+                if (dayNightTime > 0.7 || dayNightTime < 0.1) {
+                    type = 'firefly';
+                } else if (dayNightTime > 0.5) {
+                    type = Math.random() > 0.5 ? 'leaf' : 'butterfly';
+                } else {
+                    type = Math.random() > 0.3 ? 'butterfly' : 'leaf';
+                }
+                particles.push({
+                    type,
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 25,
+                    vy: (Math.random() - 0.5) * 20 + (type === 'leaf' ? 8 : 0),
+                    life: 8 + Math.random() * 12,
+                    size: 14 + Math.random() * 10,
+                    wobble: Math.random() * Math.PI * 2,
+                    alpha: 0.6 + Math.random() * 0.4
+                });
+            }
+            function updateFarmAnimations(dt) {
+                farmAnimations = farmAnimations.filter(a => {
+                    a.timer += dt;
+                    return a.timer < a.duration;
+                });
+            }
+            // ============================================================
+            // RENDERING — COLORS & HELPERS
+            // ============================================================
+            function lerpColor(c1, c2, t) {
+                const r1 = parseInt(c1.slice(1, 3), 16);
+                const g1 = parseInt(c1.slice(3, 5), 16);
+                const b1 = parseInt(c1.slice(5, 7), 16);
+                const r2 = parseInt(c2.slice(1, 3), 16);
+                const g2 = parseInt(c2.slice(3, 5), 16);
+                const b2 = parseInt(c2.slice(5, 7), 16);
+                const r = Math.round(r1 + (r2 - r1) * t);
+                const g = Math.round(g1 + (g2 - g1) * t);
+                const b = Math.round(b1 + (b2 - b1) * t);
+                return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+            }
+            function getSkyColor() {
+                const stops = [
+                    { t: 0.00, c: '#1a1a3e' },
+                    { t: 0.15, c: '#4A5568' },
+                    { t: 0.22, c: '#FDB777' },
+                    { t: 0.35, c: '#B8D4E8' },
+                    { t: 0.55, c: '#87CEEB' },
+                    { t: 0.72, c: '#FF9A76' },
+                    { t: 0.85, c: '#4A5568' },
+                    { t: 1.00, c: '#1a1a3e' }
+                ];
+                for (let i = 0; i < stops.length - 1; i++) {
+                    if (dayNightTime >= stops[i].t && dayNightTime <= stops[i + 1].t) {
+                        const t = (dayNightTime - stops[i].t) / (stops[i + 1].t - stops[i].t);
+                        return lerpColor(stops[i].c, stops[i + 1].c, t);
+                    }
+                }
+                return stops[0].c;
+            }
+            function drawRoundedRect(x, y, w, h, r) {
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + w - r, y);
+                ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                ctx.lineTo(x + w, y + h - r);
+                ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                ctx.lineTo(x + r, y + h);
+                ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                ctx.lineTo(x, y + r);
+                ctx.quadraticCurveTo(x, y, x + r, y);
+                ctx.closePath();
+            }
+            function drawImageContain(img, x, y, mw, mh) {
+                if (!img) return;
+                const ar = img.width / img.height;
+                const br = mw / mh;
+                let dw, dh;
+                if (ar > br) { dw = mw; dh = mw / ar; }
+                else { dh = mh; dw = mh * ar; }
+                const dx = x + (mw - dw) / 2;
+                const dy = y + (mh - dh) / 2;
+                ctx.drawImage(img, dx, dy, dw, dh);
+            }
+            // ============================================================
+            // RENDERING — SKY
+            // ============================================================
+            let cloudOffsets = Array.from({ length: 5 }, () => ({
+                x: Math.random() * 1200,
+                y: 30 + Math.random() * 120,
+                w: 100 + Math.random() * 120,
+                h: 35 + Math.random() * 25,
+                speed: 5 + Math.random() * 10
+            }));
+            let stars = Array.from({ length: 60 }, () => ({
+                x: Math.random(),
+                y: Math.random() * 0.6,
+                size: 0.5 + Math.random() * 2,
+                twinkle: Math.random() * Math.PI * 2
+            }));
+            function renderSky(dt) {
+                const skyColor = getSkyColor();
+                const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                skyGrad.addColorStop(0, skyColor);
+                skyGrad.addColorStop(1, lerpColor(skyColor, '#6B8E5A', 0.3));
+                ctx.fillStyle = skyGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                gameWorld.style.backgroundColor = skyColor;
+                // Stars (night)
+                const nightAlpha = dayNightTime > 0.75 ? (dayNightTime - 0.75) / 0.25 :
+                                   dayNightTime < 0.15 ? 1 - dayNightTime / 0.15 : 0;
+                if (nightAlpha > 0) {
+                    stars.forEach(s => {
+                        s.twinkle += dt * 0.002;
+                        const a = nightAlpha * (0.4 + 0.6 * Math.abs(Math.sin(s.twinkle)));
+                        ctx.fillStyle = `rgba(255, 255, 240, ${a})`;
+                        ctx.beginPath();
+                        ctx.arc(s.x * canvas.width, s.y * canvas.height, s.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+                // Sun/Moon arc
+                const arcX = canvas.width * (0.2 + dayNightTime * 0.6);
+                const arcY = canvas.height * 0.1 + Math.sin(dayNightTime * Math.PI) * (-canvas.height * 0.15);
+                if (dayNightTime > 0.1 && dayNightTime < 0.75) {
+                    // Sun
+                    const sunGlow = ctx.createRadialGradient(arcX, arcY, 0, arcX, arcY, 60);
+                    sunGlow.addColorStop(0, 'rgba(255, 220, 100, 0.6)');
+                    sunGlow.addColorStop(1, 'rgba(255, 220, 100, 0)');
+                    ctx.fillStyle = sunGlow;
+                    ctx.fillRect(arcX - 60, arcY - 60, 120, 120);
+                    ctx.fillStyle = '#FFE066';
+                    ctx.beginPath();
+                    ctx.arc(arcX, arcY, 22, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Moon
+                    const moonAlpha = nightAlpha;
+                    if (moonAlpha > 0) {
+                        const mx = canvas.width * 0.7;
+                        const my = canvas.height * 0.12;
+                        ctx.globalAlpha = moonAlpha;
+                        const moonGlow = ctx.createRadialGradient(mx, my, 0, mx, my, 50);
+                        moonGlow.addColorStop(0, 'rgba(220, 230, 255, 0.3)');
+                        moonGlow.addColorStop(1, 'rgba(220, 230, 255, 0)');
+                        ctx.fillStyle = moonGlow;
+                        ctx.fillRect(mx - 50, my - 50, 100, 100);
+                        ctx.fillStyle = '#E8E8F0';
+                        ctx.beginPath();
+                        ctx.arc(mx, my, 18, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                    }
+                }
+                // Clouds (daytime)
+                const cloudAlpha = dayNightTime > 0.15 && dayNightTime < 0.8 ?
+                    Math.min(1, Math.min((dayNightTime - 0.15) / 0.1, (0.8 - dayNightTime) / 0.1)) * 0.6 : 0;
+                if (cloudAlpha > 0) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${cloudAlpha})`;
+                    cloudOffsets.forEach(cloud => {
+                        cloud.x += cloud.speed * dt / 1000;
+                        if (cloud.x > canvas.width + 200) cloud.x = -200;
+                        // Draw cloud as overlapping ellipses
+                        ctx.beginPath();
+                        ctx.ellipse(cloud.x, cloud.y, cloud.w * 0.5, cloud.h * 0.5, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.ellipse(cloud.x - cloud.w * 0.3, cloud.y + 5, cloud.w * 0.35, cloud.h * 0.4, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.ellipse(cloud.x + cloud.w * 0.3, cloud.y + 3, cloud.w * 0.4, cloud.h * 0.45, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+            }
+            // ============================================================
+            // RENDERING — FARM
+            // ============================================================
+            let smokeParticles = [];
+            function renderMeadow() {
+                const meadow = ctx.createLinearGradient(0, FARM_Y + FARM_HEIGHT, 0, canvas.height);
+                meadow.addColorStop(0, '#7A9E68');
+                meadow.addColorStop(1, '#6B8E5A');
+                ctx.fillStyle = meadow;
+                ctx.fillRect(0, FARM_Y + FARM_HEIGHT * 0.6, canvas.width, canvas.height);
+                // Wild grass tufts outside fence
+                ctx.fillStyle = 'rgba(90, 130, 70, 0.35)';
+                for (let i = 0; i < 16; i++) {
+                    const tx = (i * 97) % canvas.width;
+                    const ty = FARM_Y + FARM_HEIGHT + 20 + (i * 43) % 80;
+                    ctx.beginPath();
+                    ctx.ellipse(tx, ty, 14, 8, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Corner trees (simple)
+                drawSimpleTree(FARM_X - 40, FARM_Y + 60, 1);
+                drawSimpleTree(FARM_X + FARM_WIDTH + 10, FARM_Y + 80, 0.9);
+                drawSimpleTree(FARM_X - 30, FARM_Y + FARM_HEIGHT - 80, 1.1);
+                drawSimpleTree(FARM_X + FARM_WIDTH + 5, FARM_Y + FARM_HEIGHT - 100, 0.85);
+            }
+            function drawSimpleTree(x, y, s) {
+                ctx.fillStyle = '#5C4030';
+                ctx.fillRect(x + 12 * s, y + 30 * s, 14 * s, 35 * s);
+                ctx.fillStyle = '#5A9048';
+                ctx.beginPath();
+                ctx.arc(x + 20 * s, y + 22 * s, 28 * s, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#6BA858';
+                ctx.beginPath();
+                ctx.arc(x + 8 * s, y + 28 * s, 18 * s, 0, Math.PI * 2);
+                ctx.arc(x + 32 * s, y + 26 * s, 16 * s, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            function renderFarmFence() {
+                const pad = FENCE_PAD;
+                const fx = FARM_X - pad;
+                const fy = FARM_Y - pad;
+                const fw = FARM_WIDTH + pad * 2;
+                const fh = FARM_HEIGHT + pad * 2;
+                const postW = Math.max(6, Math.floor(8 * (FARM_WIDTH / 600)));
+                const railH = Math.max(4, Math.floor(6 * (FARM_WIDTH / 600)));
+                const gateW = Math.floor(56 * (FARM_WIDTH / 600));
+                const gateX = fx + fw / 2 - gateW / 2;
+                const woodLight = '#C4A574';
+                const woodDark = '#8B6340';
+                const drawPost = (px, py, h) => {
+                    ctx.fillStyle = woodDark;
+                    ctx.fillRect(px, py, postW, h);
+                    ctx.fillStyle = woodLight;
+                    ctx.fillRect(px + 1, py, postW - 2, h * 0.4);
+                };
+                const drawRail = (x1, y1, x2, y2) => {
+                    ctx.strokeStyle = woodDark;
+                    ctx.lineWidth = railH;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                    ctx.strokeStyle = woodLight;
+                    ctx.lineWidth = railH * 0.5;
+                    ctx.stroke();
+                };
+                const postH = fh;
+                const step = Math.floor(36 * (FARM_WIDTH / 600));
+                // Left & right posts
+                for (let py = fy; py < fy + fh; py += step) {
+                    drawPost(fx, py, Math.min(step + 8, fy + fh - py));
+                    drawPost(fx + fw - postW, py, Math.min(step + 8, fy + fh - py));
+                }
+                // Top posts
+                for (let px = fx; px < fx + fw; px += step) {
+                    drawPost(px, fy, postW);
+                }
+                // Bottom posts (with gate gap)
+                for (let px = fx; px < gateX - 4; px += step) {
+                    drawPost(px, fy + fh - postW, postW);
+                }
+                for (let px = gateX + gateW + 4; px < fx + fw; px += step) {
+                    drawPost(px, fy + fh - postW, postW);
+                }
+                drawRail(fx + postW / 2, fy + fh * 0.35, fx + fw - postW / 2, fy + fh * 0.35);
+                drawRail(fx + postW / 2, fy + fh * 0.65, fx + fw - postW / 2, fy + fh * 0.65);
+                drawRail(fx + fw * 0.35, fy + postW, fx + fw * 0.35, fy + fh - postW);
+                drawRail(fx + fw * 0.65, fy + postW, fx + fw * 0.65, fy + fh - postW);
+                // Gate arch
+                ctx.fillStyle = 'rgba(196, 169, 125, 0.5)';
+                ctx.fillRect(gateX, fy + fh - postW - 4, gateW, postW + 8);
+            }
+            function renderCrossPaths() {
+                const pathColor = '#C4A97D';
+                const pathDark = '#B09870';
+                ctx.fillStyle = pathColor;
+                // Vertical: cabin to plots through grid center
+                const vx = PLAYER_X - PATH_W / 2;
+                ctx.fillRect(vx, CABIN_Y + CABIN_H - 8, PATH_W, PLOTS_START_Y + GRID_H - CABIN_Y - CABIN_H + 24);
+                // Horizontal through plot grid center
+                const hy = PLAYER_Y - PATH_W / 2;
+                ctx.fillRect(PLOTS_START_X - 16, hy, GRID_W + 32, PATH_W);
+                // Path edge shading
+                ctx.fillStyle = pathDark;
+                ctx.globalAlpha = 0.25;
+                ctx.fillRect(vx, hy, PATH_W, PATH_W);
+                ctx.globalAlpha = 1;
+                // Pebbles
+                ctx.fillStyle = 'rgba(180, 150, 110, 0.45)';
+                for (let i = 0; i < 20; i++) {
+                    const px = PLOTS_START_X + (i * 47) % GRID_W;
+                    const py = PLOTS_START_Y + (i * 31) % GRID_H;
+                    if (Math.abs(px + PLOT_SIZE / 2 - PLAYER_X) < PATH_W && Math.abs(py + PLOT_SIZE / 2 - PLAYER_Y) < PATH_W) {
+                        ctx.beginPath();
+                        ctx.arc(px, py, 1.5 + (i % 2), 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+            function renderPlayerCharacter(timestamp) {
+                const bob = Math.sin(playerBob) * 3;
+                const x = PLAYER_X;
+                const y = PLAYER_Y + bob;
+                const s = Math.max(0.85, FARM_WIDTH / 600);
+                const clothesColor = window.gameConfig.player.clothesColor || '#5B8BD4';
+                const shirtColor = window.gameConfig.player.shirtColor || '#FFFFFF';
+                ctx.save();
+                ctx.translate(x, y);
+                // Soft shadow
+                ctx.fillStyle = 'rgba(60, 40, 25, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(0, 22 * s, 18 * s, 6 * s, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Legs
+                ctx.fillStyle = '#4A6FA5';
+                ctx.fillRect(-10 * s, 8 * s, 8 * s, 14 * s);
+                ctx.fillRect(2 * s, 8 * s, 8 * s, 14 * s);
+                // Body / overalls
+                ctx.fillStyle = clothesColor;
+                ctx.fillRect(-14 * s, -6 * s, 28 * s, 18 * s);
+                ctx.fillStyle = shirtColor;
+                ctx.fillRect(-10 * s, -4 * s, 20 * s, 12 * s);
+                // Straps
+                ctx.fillStyle = clothesColor;
+                ctx.fillRect(-10 * s, -6 * s, 5 * s, 10 * s);
+                ctx.fillRect(5 * s, -6 * s, 5 * s, 10 * s);
+                // Head
+                ctx.fillStyle = '#F5D0A8';
+                ctx.beginPath();
+                ctx.arc(0, -14 * s, 12 * s, 0, Math.PI * 2);
+                ctx.fill();
+                // Hair
+                ctx.fillStyle = '#6B4423';
+                ctx.beginPath();
+                ctx.arc(0, -18 * s, 11 * s, Math.PI, 0);
+                ctx.fill();
+                // Eyes
+                ctx.fillStyle = '#4A3728';
+                ctx.beginPath();
+                ctx.arc(-4 * s, -14 * s, 2 * s, 0, Math.PI * 2);
+                ctx.arc(4 * s, -14 * s, 2 * s, 0, Math.PI * 2);
+                ctx.fill();
+                // Blush
+                ctx.fillStyle = 'rgba(255, 160, 140, 0.35)';
+                ctx.beginPath();
+                ctx.ellipse(-8 * s, -10 * s, 4 * s, 2 * s, 0, 0, Math.PI * 2);
+                ctx.ellipse(8 * s, -10 * s, 4 * s, 2 * s, 0, 0, Math.PI * 2);
+                ctx.fill();
+                if (window.gameConfig.player.name) {
+                    ctx.font = `${Math.floor(11 * s)}px Fredoka`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = 'rgba(70, 45, 28, 0.85)';
+                    ctx.fillText(window.gameConfig.player.name, 0, -36 * s);
+                }
+                ctx.restore();
+            }
+            function renderFarm(dt, timestamp) {
+                renderMeadow();
+                // Grass with layered tones (inside fence)
+                const grassBase = window.gameConfig.colorPalette.grass || '#8B9D83';
+                ctx.save();
+                drawRoundedRect(FARM_X, FARM_Y, FARM_WIDTH, FARM_HEIGHT, 16);
+                ctx.clip();
+                ctx.fillStyle = grassBase;
+                ctx.fillRect(FARM_X, FARM_Y, FARM_WIDTH, FARM_HEIGHT);
+                ctx.fillStyle = 'rgba(160, 190, 140, 0.3)';
+                for (let i = 0; i < 12; i++) {
+                    const px = FARM_X + ((i * 137 + 50) % FARM_WIDTH);
+                    const py = FARM_Y + ((i * 89 + 30) % FARM_HEIGHT);
+                    ctx.beginPath();
+                    ctx.ellipse(px, py, 30 + (i % 3) * 15, 20 + (i % 2) * 10, (i * 0.5), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = 'rgba(100, 130, 90, 0.12)';
+                for (let y = FARM_Y; y < FARM_Y + FARM_HEIGHT; y += 40) {
+                    ctx.fillRect(FARM_X, y, FARM_WIDTH, 3);
+                }
+                ctx.restore();
+                renderCrossPaths();
+                renderDecorations();
+                // Cabin
+                renderCabin(dt, timestamp);
+                // Soil plots & crops
+                renderPlots(timestamp);
+                renderPlayerCharacter(timestamp);
+                renderPet(timestamp);
+                renderFarmFence();
+                // Farm animations
+                renderFarmAnimations();
+                // Particles
+                renderParticles();
+                // Night overlay
+                const nightOverlayAlpha = dayNightTime > 0.75 ? (dayNightTime - 0.75) / 0.25 * 0.25 :
+                                           dayNightTime < 0.15 ? (1 - dayNightTime / 0.15) * 0.25 : 0;
+                if (nightOverlayAlpha > 0) {
+                    ctx.fillStyle = `rgba(15, 15, 50, ${nightOverlayAlpha})`;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            function renderCabin(dt, timestamp) {
+                if (assetCache['farm_cabin']) {
+                    drawImageContain(assetCache['farm_cabin'].img, CABIN_X, CABIN_Y, CABIN_W, CABIN_H);
+                } else {
+                    // Procedural cabin fallback
+                    // Walls
+                    ctx.fillStyle = '#A67C52';
+                    ctx.fillRect(CABIN_X + 20, CABIN_Y + 50, CABIN_W - 40, CABIN_H - 50);
+                    // Roof
+                    ctx.fillStyle = '#8B4513';
+                    ctx.beginPath();
+                    ctx.moveTo(CABIN_X + 10, CABIN_Y + 55);
+                    ctx.lineTo(CABIN_X + CABIN_W / 2, CABIN_Y + 10);
+                    ctx.lineTo(CABIN_X + CABIN_W - 10, CABIN_Y + 55);
+                    ctx.closePath();
+                    ctx.fill();
+                    // Door
+                    ctx.fillStyle = '#6B4226';
+                    const doorW = 22; const doorH = 35;
+                    ctx.fillRect(CABIN_X + CABIN_W / 2 - doorW / 2, CABIN_Y + CABIN_H - doorH, doorW, doorH);
+                    // Window
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.fillRect(CABIN_X + 35, CABIN_Y + 70, 20, 18);
+                    ctx.strokeStyle = '#5C3A1E';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(CABIN_X + 35, CABIN_Y + 70, 20, 18);
+                }
+                // Chimney smoke
+                smokeParticles = smokeParticles.filter(s => s.life > 0);
+                if (smokeParticles.length < 6 && Math.random() < 0.05) {
+                    smokeParticles.push({
+                        x: CABIN_X + CABIN_W * 0.7,
+                        y: CABIN_Y + 15,
+                        vy: -12 - Math.random() * 8,
+                        vx: (Math.random() - 0.5) * 4,
+                        size: 4 + Math.random() * 4,
+                        life: 2 + Math.random() * 2,
+                        maxLife: 3
+                    });
+                }
+                smokeParticles.forEach(s => {
+                    s.x += s.vx * dt / 1000;
+                    s.y += s.vy * dt / 1000;
+                    s.life -= dt / 1000;
+                    s.size += dt * 0.003;
+                    const a = (s.life / s.maxLife) * 0.3;
+                    ctx.fillStyle = `rgba(200, 200, 210, ${a})`;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+            function renderDecorations() {
+                const decs = window.gameConfig.decorations;
+                const scale = FARM_WIDTH / 600;
+                if (decs.tree.visible && assetCache['decorative_tree_small']) {
+                    const tx = FARM_X + decs.tree.x * scale;
+                    const ty = FARM_Y + decs.tree.y * scale;
+                    drawImageContain(assetCache['decorative_tree_small'].img, tx, ty, 80 * scale, 100 * scale);
+                }
+                if (decs.fence.visible && assetCache['decorative_fence']) {
+                    const fx = FARM_X + decs.fence.x * scale;
+                    const fy = FARM_Y + decs.fence.y * scale;
+                    drawImageContain(assetCache['decorative_fence'].img, fx, fy, 100 * scale, 50 * scale);
+                }
+                if (decs.flowerPatch.visible && assetCache['decorative_flower_patch']) {
+                    const fpx = FARM_X + decs.flowerPatch.x * scale;
+                    const fpy = FARM_Y + decs.flowerPatch.y * scale;
+                    drawImageContain(assetCache['decorative_flower_patch'].img, fpx, fpy, 70 * scale, 70 * scale);
+                }
+            }
+            function renderPlots(timestamp) {
+                window.gameConfig.soilPlots.forEach((plot, idx) => {
+                    // Soil base — rounded
+                    ctx.save();
+                    drawRoundedRect(plot.x, plot.y, PLOT_SIZE, PLOT_SIZE, 10);
+                    ctx.fillStyle = '#8B6F47';
+                    ctx.fill();
+                    // Inner soil texture
+                    ctx.fillStyle = 'rgba(120, 90, 55, 0.4)';
+                    for (let r = 0; r < 3; r++) {
+                        const ly = plot.y + 15 + r * (PLOT_SIZE - 30) / 2;
+                        ctx.fillRect(plot.x + 8, ly, PLOT_SIZE - 16, 2);
+                    }
+                    // Border
+                    drawRoundedRect(plot.x, plot.y, PLOT_SIZE, PLOT_SIZE, 10);
+                    ctx.strokeStyle = 'rgba(90, 65, 35, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.restore();
+                    // Crop
+                    if (plot.crop && plot.growthStage > 0) {
+                        let assetId;
+                        if (plot.growthStage === 1) assetId = `${plot.crop}_seed`;
+                        else if (plot.growthStage === 2) assetId = `${plot.crop}_sprout`;
+                        else assetId = `${plot.crop}_mature`;
+                        const cropAsset = assetCache[assetId];
+                        const padded = PLOT_SIZE * 0.15;
+                        const cropX = plot.x + padded;
+                        const cropY = plot.y + padded;
+                        const cropW = PLOT_SIZE - padded * 2;
+                        const cropH = PLOT_SIZE - padded * 2;
+                        // Mature bobbing
+                        let offsetY = 0;
+                        if (plot.growthStage === 3) {
+                            offsetY = Math.sin(timestamp * 0.003 + idx) * 3;
+                        }
+                        if (cropAsset) {
+                            ctx.save();
+                            ctx.translate(0, offsetY);
+                            drawImageContain(cropAsset.img, cropX, cropY, cropW, cropH);
+                            ctx.restore();
+                        } else {
+                            // Emoji fallback
+                            ctx.save();
+                            ctx.translate(0, offsetY);
+                            ctx.font = `${Math.floor(cropW * 0.6)}px sans-serif`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(cropEmoji[plot.crop] || '🌱', plot.x + PLOT_SIZE / 2, plot.y + PLOT_SIZE / 2);
+                            ctx.restore();
+                        }
+                        // Growth progress ring (stages 1-2)
+                        if (plot.growthStage < 3) {
+                            const progress = plot.growthTimer / 30000;
+                            const ringX = plot.x + PLOT_SIZE - 14;
+                            const ringY = plot.y + PLOT_SIZE - 14;
+                            const ringR = 8;
+                            // Background ring
+                            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+                            ctx.lineWidth = 3;
+                            ctx.beginPath();
+                            ctx.arc(ringX, ringY, ringR, 0, Math.PI * 2);
+                            ctx.stroke();
+                            // Progress
+                            ctx.strokeStyle = '#7FB069';
+                            ctx.lineWidth = 3;
+                            ctx.lineCap = 'round';
+                            ctx.beginPath();
+                            ctx.arc(ringX, ringY, ringR, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+                            ctx.stroke();
+                            ctx.lineCap = 'butt';
+                        }
+                        // Harvest sparkles (stage 3)
+                        if (plot.growthStage === 3) {
+                            for (let s = 0; s < 3; s++) {
+                                const sx = plot.x + 12 + Math.sin(timestamp * 0.002 + s * 2.1 + idx) * (PLOT_SIZE - 24);
+                                const sy = plot.y + 8 + Math.cos(timestamp * 0.003 + s * 1.7 + idx) * 12;
+                                const sa = 0.3 + Math.sin(timestamp * 0.005 + s + idx) * 0.3;
+                                const ss = 2 + Math.sin(timestamp * 0.004 + s * 0.5) * 1.5;
+                                ctx.fillStyle = `rgba(255, 240, 150, ${sa})`;
+                                ctx.beginPath();
+                                // 4-point star
+                                ctx.save();
+                                ctx.translate(sx, sy);
+                                ctx.rotate(timestamp * 0.001 + s);
+                                ctx.moveTo(0, -ss);
+                                ctx.lineTo(ss * 0.3, -ss * 0.3);
+                                ctx.lineTo(ss, 0);
+                                ctx.lineTo(ss * 0.3, ss * 0.3);
+                                ctx.lineTo(0, ss);
+                                ctx.lineTo(-ss * 0.3, ss * 0.3);
+                                ctx.lineTo(-ss, 0);
+                                ctx.lineTo(-ss * 0.3, -ss * 0.3);
+                                ctx.closePath();
+                                ctx.fill();
+                                ctx.restore();
+                            }
+                        }
+                    } else {
+                        // Empty plot — subtle "+" hint
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                        ctx.font = `${Math.floor(PLOT_SIZE * 0.3)}px Fredoka`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('+', plot.x + PLOT_SIZE / 2, plot.y + PLOT_SIZE / 2);
+                    }
+                });
+            }
+            function renderPet(timestamp) {
+                const bounceY = Math.sin(petBounce) * 3;
+                const petSize = PLOT_SIZE * 0.55;
+                if ((window.gameConfig.pet.type || 'bunny') === 'bunny' && assetCache['pet_bunny_idle']) {
+                    drawImageContain(
+                        assetCache['pet_bunny_idle'].img,
+                        petPos.x - petSize / 2,
+                        petPos.y - petSize / 2 + bounceY,
+                        petSize, petSize
+                    );
+                } else {
+                    // Fallback pet emoji
+                    ctx.font = `${Math.floor(petSize * 0.7)}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(getPetEmoji(), petPos.x, petPos.y + bounceY);
+                }
+                if (window.gameConfig.pet.name) {
+                    ctx.font = `${Math.floor(11 * Math.max(0.9, FARM_WIDTH / 720))}px Fredoka`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = 'rgba(70, 45, 28, 0.85)';
+                    ctx.fillText(window.gameConfig.pet.name, petPos.x, petPos.y - petSize * 0.62 + bounceY);
+                }
+                // Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                ctx.beginPath();
+                ctx.ellipse(petPos.x, petPos.y + petSize / 2 + 4, petSize * 0.3, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            function renderParticles() {
+                particles.forEach(p => {
+                    const asset = assetCache[`particle_${p.type}`];
+                    const wobbleX = Math.sin(p.wobble) * 5;
+                    const fadeAlpha = Math.min(1, p.life / 2) * p.alpha;
+                    ctx.globalAlpha = fadeAlpha;
+                    if (p.type === 'firefly') {
+                        // Glowing firefly
+                        const glow = ctx.createRadialGradient(
+                            p.x + wobbleX, p.y, 0,
+                            p.x + wobbleX, p.y, p.size * 1.5
+                        );
+                        glow.addColorStop(0, 'rgba(255, 255, 150, 0.8)');
+                        glow.addColorStop(0.5, 'rgba(255, 230, 100, 0.3)');
+                        glow.addColorStop(1, 'rgba(255, 230, 100, 0)');
+                        ctx.fillStyle = glow;
+                        ctx.fillRect(
+                            p.x + wobbleX - p.size * 1.5,
+                            p.y - p.size * 1.5,
+                            p.size * 3, p.size * 3
+                        );
+                        ctx.fillStyle = '#FFFF99';
+                        ctx.beginPath();
+                        ctx.arc(p.x + wobbleX, p.y, 2.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (asset) {
+                        ctx.save();
+                        ctx.translate(p.x + wobbleX, p.y);
+                        ctx.rotate(Math.sin(p.wobble * 0.5) * 0.3);
+                        drawImageContain(asset.img, -p.size / 2, -p.size / 2, p.size, p.size);
+                        ctx.restore();
+                    } else {
+                        // Fallback
+                        ctx.fillStyle = p.type === 'leaf' ? 'rgba(120, 180, 80, 0.6)' : 'rgba(200, 150, 255, 0.5)';
+                        ctx.beginPath();
+                        ctx.arc(p.x + wobbleX, p.y, p.size * 0.3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = 1;
+                });
+            }
+            function renderFarmAnimations() {
+                farmAnimations.forEach(a => {
+                    const progress = a.timer / a.duration;
+                    if (a.type === 'floatText') {
+                        const alpha = 1 - progress;
+                        const yOff = progress * -40;
+                        ctx.save();
+                        ctx.globalAlpha = alpha;
+                        ctx.font = 'bold 20px Fredoka';
+                        ctx.textAlign = 'center';
+                        ctx.fillStyle = '#FFD700';
+                        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                        ctx.lineWidth = 3;
+                        ctx.strokeText(a.text, a.x, a.y + yOff);
+                        ctx.fillText(a.text, a.x, a.y + yOff);
+                        ctx.restore();
+                    }
+                    if (a.type === 'harvestBurst') {
+                        a.particles.forEach(p => {
+                            const px = a.x + Math.cos(p.angle) * p.speed * progress;
+                            const py = a.y + Math.sin(p.angle) * p.speed * progress;
+                            const alpha = 1 - progress;
+                            const color = a.crop === 'carrot' ? '255, 165, 0' :
+                                          a.crop === 'tomato' ? '255, 80, 80' :
+                                          a.crop === 'wheat' ? '240, 200, 100' :
+                                          '255, 180, 220';
+                            ctx.fillStyle = `rgba(${color}, ${alpha})`;
+                            ctx.beginPath();
+                            ctx.arc(px, py, p.size * (1 - progress * 0.5), 0, Math.PI * 2);
+                            ctx.fill();
+                        });
+                    }
+                    if (a.type === 'heart') {
+                        const scale = 1 + progress * 0.5;
+                        const alpha = 1 - progress;
+                        const yOff = -progress * 25;
+                        ctx.save();
+                        ctx.globalAlpha = alpha;
+                        ctx.font = `${Math.floor(20 * scale)}px sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('❤️', a.x, a.y + yOff);
+                        ctx.restore();
+                    }
+                    if (a.type === 'plantDrop') {
+                        const drop = Math.min(1, progress * 2);
+                        const bounce = drop < 1 ? 0 : Math.sin((progress - 0.5) * Math.PI * 4) * (1 - progress) * 5;
+                        const alpha = 1 - progress;
+                        ctx.save();
+                        ctx.globalAlpha = alpha;
+                        ctx.fillStyle = '#7FB069';
+                        ctx.beginPath();
+                        ctx.arc(a.x, a.startY + (a.y - a.startY) * drop + bounce, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                });
+            }
+            // ============================================================
+            // RENDERING — REST AREA
+            // ============================================================
+            let restStars = Array.from({ length: 80 }, () => ({
+                x: Math.random(),
+                y: Math.random() * 0.7,
+                size: 0.5 + Math.random() * 2,
+                twinkle: Math.random() * Math.PI * 2,
+                speed: 0.002 + Math.random() * 0.003
+            }));
+            let restFireflies = Array.from({ length: 15 }, () => ({
+                x: Math.random(),
+                y: 0.3 + Math.random() * 0.5,
+                vx: (Math.random() - 0.5) * 0.02,
+                vy: (Math.random() - 0.5) * 0.015,
+                phase: Math.random() * Math.PI * 2,
+                size: 2 + Math.random() * 3
+            }));
+            function renderRestScene(dt) {
+                if (!restCtx || !restCanvas) return;
+                restCtx.clearRect(0, 0, restCanvas.width, restCanvas.height);
+                // Stars
+                restStars.forEach(s => {
+                    s.twinkle += s.speed * dt;
+                    const a = 0.3 + 0.7 * Math.abs(Math.sin(s.twinkle));
+                    restCtx.fillStyle = `rgba(255, 255, 240, ${a})`;
+                    restCtx.beginPath();
+                    restCtx.arc(s.x * restCanvas.width, s.y * restCanvas.height, s.size, 0, Math.PI * 2);
+                    restCtx.fill();
+                });
+                // Fireflies
+                restFireflies.forEach(f => {
+                    f.phase += dt * 0.003;
+                    f.x += f.vx * dt / 1000;
+                    f.y += f.vy * dt / 1000;
+                    // Wrap
+                    if (f.x < -0.05) f.x = 1.05;
+                    if (f.x > 1.05) f.x = -0.05;
+                    if (f.y < 0.2) f.vy = Math.abs(f.vy);
+                    if (f.y > 0.85) f.vy = -Math.abs(f.vy);
+                    const px = f.x * restCanvas.width;
+                    const py = f.y * restCanvas.height;
+                    const glow = Math.abs(Math.sin(f.phase));
+                    const grad = restCtx.createRadialGradient(px, py, 0, px, py, f.size * 6);
+                    grad.addColorStop(0, `rgba(200, 255, 150, ${0.5 * glow})`);
+                    grad.addColorStop(0.5, `rgba(180, 255, 130, ${0.15 * glow})`);
+                    grad.addColorStop(1, 'rgba(180, 255, 130, 0)');
+                    restCtx.fillStyle = grad;
+                    restCtx.fillRect(px - f.size * 6, py - f.size * 6, f.size * 12, f.size * 12);
+                    restCtx.fillStyle = `rgba(220, 255, 180, ${0.8 * glow})`;
+                    restCtx.beginPath();
+                    restCtx.arc(px, py, f.size * 0.6, 0, Math.PI * 2);
+                    restCtx.fill();
+                });
+            }
+            // ============================================================
+            // START SCREEN PARTICLES
+            // ============================================================
+            let startParticles = Array.from({ length: 12 }, () => ({
+                x: Math.random() * 100,
+                y: Math.random() * 100,
+                vx: (Math.random() - 0.5) * 15,
+                vy: -5 - Math.random() * 10,
+                emoji: ['🍂', '🌿', '🌻', '🦋', '🌾'][Math.floor(Math.random() * 5)],
+                size: 16 + Math.random() * 12,
+                phase: Math.random() * Math.PI * 2
+            }));
+            function renderStartScreen(dt) {
+                if (!document.getElementById('start-screen').classList.contains('hidden')) {
+                    // Animate leaf particles on start screen canvas... actually we'll just use CSS for start screen
+                }
+            }
+            // ============================================================
+            // MAIN GAME LOOP
+            // ============================================================
+            let dt = 0;
+            let loopStarted = false;
+            function isMenuHidden() {
+                const screen = startScreenEl || document.getElementById('start-screen');
+                return screen && screen.classList.contains('hidden');
+            }
+            function gameLoop(timestamp) {
+                loopStarted = true;
+                dt = timestamp - lastTime;
+                lastTime = timestamp;
+                if (dt > 100) dt = 16;
+                if (dt < 0) dt = 16;
+                try {
+                    if (canvas.width < 2 || canvas.height < 2) resizeCanvas();
+                    const showGame = currentMode === 'edit' || currentMode === 'play';
+                    const menuHidden = isMenuHidden();
+                    if (showGame && (gameStarted || currentMode === 'edit' || menuHidden)) {
+                        if (gameStarted || currentMode === 'edit') update(dt);
+                        if (currentScene === 'farm') {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            renderSky(dt);
+                            renderFarm(dt, timestamp);
+                        } else if (currentScene === 'rest') {
+                            renderRestScene(dt);
+                        }
+                    }
+                } catch (err) {
+                    if (!window.__wmRenderError) {
+                        window.__wmRenderError = String(err && err.message ? err.message : err);
+                        console.error('[Whispering Meadows] render:', err);
+                    }
+                }
+                requestAnimationFrame(gameLoop);
+            }
+            // Initialize
+            updateHarvestCounter();
+            updateTimeDisplay();
+            function beginPlaySession() {
+                menuTransitioning = false;
+                const screen = startScreenEl || document.getElementById('start-screen');
+                if (screen) {
+                    screen.classList.add('hidden');
+                    screen.classList.remove('hiding');
+                }
+                if (menuParticleFrame) {
+                    cancelAnimationFrame(menuParticleFrame);
+                    menuParticleFrame = null;
+                }
+                const ui = document.getElementById('ui-overlay');
+                if (ui) ui.style.display = '';
+                resizeCanvas();
+                canvas.style.pointerEvents = 'auto';
+                gameStarted = true;
+                updateHotbar();
+                updateHarvestCounter();
+                startAutoSave();
+                if (typeof menuMusicMuted !== 'undefined' && !menuMusicMuted) {
+                    void startBgMusic().catch(() => {});
+                }
+            }
+            window.__wmForceBeginPlay = beginPlaySession;
+            window.__wmStartGame = function (e) {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                window.__wmUserStarted = true;
+                if (gameStarted) return;
+                if (typeof openStarterSetup === 'function') {
+                    openStarterSetup();
+                } else {
+                    beginPlaySession();
+                }
+            };
+
+            lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+
+            if (currentMode === 'edit') {
+                startScreenEl.classList.add('hidden');
+                beginPlaySession();
+            } else if (currentMode === 'play') {
+                if (window.__wmUserStarted) {
+                    beginPlaySession();
+                } else {
+                    const ui = document.getElementById('ui-overlay');
+                    if (ui) ui.style.display = 'none';
+                    setupMainMenu();
+                }
+            }
+            window.__wmRunComplete = true;
+        } // end run()
+
+        /* Local dev + Astrocade: start game if host never calls run() */
+        (function bootWhisperingMeadows() {
+            if (!window.gameConfig) {
+                window.gameConfig = {
+                    crops: { available: ['carrot', 'tomato', 'wheat', 'flower'], growthSpeedMultiplier: 1 },
+                    soilPlots: [],
+                    decorations: {
+                        tree: { visible: true, x: 100, y: 200 },
+                        fence: { visible: true, x: 300, y: 150 },
+                        flowerPatch: { visible: true, x: 500, y: 250 }
+                    },
+                    pet: { type: 'bunny', speed: 1 },
+                    atmosphere: { timeOfDay: 'afternoon', cycleSpeed: 'normal', weather: 'sunny', particleDensity: 1 },
+                    colorPalette: { grass: '#8B9D83', cabin: '#A67C52', sky: '#B8D4E8' },
+                    audio: {
+                        backgroundMusic: 'background_music_lofi',
+                        musicVolume: 0.5, sfxVolume: 0.7, ambientVolume: 0.6
+                    },
+                    inventory: {
+                        seeds: { carrot: 5, tomato: 5, wheat: 5, flower: 3 },
+                        harvested: { carrot: 0, tomato: 0, wheat: 0, flower: 0 }
+                    },
+                    gameDay: 1
+                };
+            }
+            if (!window.mode) window.mode = 'play';
+            if (typeof window.lib === 'undefined') {
+                window.lib = {
+                    getAsset: function () { return undefined; },
+                    log: function (m) { console.log('[Whispering Meadows]', m); },
+                    showGameParameters: function () {},
+                    getUserGameState: async function () { return { state: null }; },
+                    saveUserGameState: async function () { return { success: true }; }
+                };
+            }
+            function isLocalPreview() {
+                try {
+                    var h = (typeof location !== 'undefined' && location.hostname) || '';
+                    return h === 'localhost' || h === '127.0.0.1' || h === '';
+                } catch (e) {
+                    return true;
+                }
+            }
+            function startRun() {
+                if (window.__wmRunStarted || typeof run !== 'function') return;
+                window.__wmRunPromise = run(window.mode || 'play').catch(function (err) {
+                    window.__wmBootError = String(err && err.stack ? err.stack : err);
+                    console.error('[Whispering Meadows] run() failed:', err);
+                });
+            }
+            if (isLocalPreview()) {
+                var kick = function () { setTimeout(startRun, 100); };
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', kick);
+                } else {
+                    kick();
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
+
+    
