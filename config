@@ -1,0 +1,70 @@
+{
+  "crops": {
+    "available": [
+      "carrot",
+      "tomato",
+      "wheat",
+      "flower"
+    ],
+    "growthSpeedMultiplier": 1,
+    "startingSeeds": {
+      "carrot": 5,
+      "tomato": 5,
+      "wheat": 5,
+      "flower": 3
+    }
+  },
+  "soilPlots": [],
+  "decorations": {
+    "tree": {
+      "visible": true,
+      "x": 100,
+      "y": 200
+    },
+    "fence": {
+      "visible": true,
+      "x": 300,
+      "y": 150
+    },
+    "flowerPatch": {
+      "visible": true,
+      "x": 500,
+      "y": 250
+    }
+  },
+  "pet": {
+    "type": "bunny",
+    "speed": 1
+  },
+  "atmosphere": {
+    "timeOfDay": "afternoon",
+    "cycleSpeed": "normal",
+    "weather": "sunny",
+    "particleDensity": 1
+  },
+  "colorPalette": {
+    "grass": "#8B9D83",
+    "cabin": "#A67C52",
+    "sky": "#B8D4E8"
+  },
+  "audio": {
+    "backgroundMusic": "background_music_lofi",
+    "musicVolume": 0.5,
+    "sfxVolume": 0.7,
+    "ambientVolume": 0.6
+  },
+  "inventory": {
+    "seeds": {
+      "carrot": 5,
+      "tomato": 5,
+      "wheat": 5,
+      "flower": 3
+    },
+    "harvested": {
+      "carrot": 0,
+      "tomato": 0,
+      "wheat": 0,
+      "flower": 0
+    }
+  }
+}

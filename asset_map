@@ -1,0 +1,224 @@
+// Asset Map (Read-Only)
+// Edit assets in the Media tab.
+// Use these IDs alongside lib to reference assets in your code:
+//
+// Example: lib.getAsset["player_sprite"]
+
+const assets = {
+  "farm_cabin": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/farm_cabin_591169da-7a4b-49fe-92c2-1868b9254e16.webp",
+    "type": "image",
+    "aspect_ratio": [
+      654,
+      824
+    ]
+  },
+  "carrot_seed": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/carrot_seed_65921ff6-cd36-4b5d-87d3-b18280e46963.webp",
+    "type": "image",
+    "aspect_ratio": [
+      514,
+      641
+    ]
+  },
+  "carrot_sprout": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/carrot_sprout_d63de531-0d67-4853-af2c-3ac47b4a18bb.webp",
+    "type": "image",
+    "aspect_ratio": [
+      890,
+      969
+    ]
+  },
+  "carrot_mature": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/carrot_mature_fa960ff5-40cb-4389-ae1e-c5fac01b11d2.webp",
+    "type": "image",
+    "aspect_ratio": [
+      922,
+      1220
+    ]
+  },
+  "tomato_seed": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/tomato_seed_90473a2f-d1d3-4441-a1f4-1f8a05a7ef98.webp",
+    "type": "image",
+    "aspect_ratio": [
+      588,
+      648
+    ]
+  },
+  "tomato_sprout": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/tomato_sprout_d96d4982-1c11-4d9f-9ca8-146d558cac47.webp",
+    "type": "image",
+    "aspect_ratio": [
+      965,
+      1530
+    ]
+  },
+  "tomato_mature": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/tomato_mature_075cd88b-ecf1-4e5d-98fb-c56e4bf3d9ad.webp",
+    "type": "image",
+    "aspect_ratio": [
+      781,
+      928
+    ]
+  },
+  "wheat_seed": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/wheat_seed_0d148551-ca33-4530-a64d-d34c5a62c8fa.webp",
+    "type": "image",
+    "aspect_ratio": [
+      558,
+      585
+    ]
+  },
+  "wheat_sprout": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/wheat_sprout_01ca38fd-d034-4fba-967a-414c10314af2.webp",
+    "type": "image",
+    "aspect_ratio": [
+      991,
+      864
+    ]
+  },
+  "wheat_mature": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/wheat_mature_66ea38cb-851c-418d-ad69-e667516ff14e.webp",
+    "type": "image",
+    "aspect_ratio": [
+      906,
+      1334
+    ]
+  },
+  "flower_seed": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/flower_seed_5f02fab0-666f-47a3-a8f5-5b628e8189e0.webp",
+    "type": "image",
+    "aspect_ratio": [
+      598,
+      643
+    ]
+  },
+  "flower_sprout": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/flower_sprout_bc889229-a539-4eb4-ac27-3680fc02275f.webp",
+    "type": "image",
+    "aspect_ratio": [
+      781,
+      955
+    ]
+  },
+  "flower_mature": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/flower_mature_9a1e4702-f688-4729-8da6-cd1f4e335062.webp",
+    "type": "image",
+    "aspect_ratio": [
+      923,
+      1530
+    ]
+  },
+  "pet_bunny_idle": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/pet_bunny_idle_fae86bc5-9f21-4816-8fef-55af770ce7ad.webp",
+    "type": "image",
+    "aspect_ratio": [
+      862,
+      1222
+    ]
+  },
+  "decorative_tree_small": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/decorative_tree_small_5aaecf77-fc92-4363-b8c2-7b5ba7faca3a.webp",
+    "type": "image",
+    "aspect_ratio": [
+      752,
+      1155
+    ]
+  },
+  "decorative_fence": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/decorative_fence_cbd951a2-9cd5-4bc3-b7e3-009003c696c3.webp",
+    "type": "image",
+    "aspect_ratio": [
+      706,
+      760
+    ]
+  },
+  "decorative_flower_patch": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/decorative_flower_patch_9078c512-c1c6-4657-872f-5da8b5232241.webp",
+    "type": "image",
+    "aspect_ratio": [
+      674,
+      1090
+    ]
+  },
+  "ui_panel_background": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/ui_panel_background_e1c4b09e-4bfd-480c-a302-429c97aea379.webp",
+    "type": "image",
+    "aspect_ratio": [
+      1536,
+      1024
+    ]
+  },
+  "rest_area_bench": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/rest_area_bench_0a817453-333f-4d42-a1f0-81801d8b25a2.webp",
+    "type": "image",
+    "aspect_ratio": [
+      755,
+      757
+    ]
+  },
+  "particle_firefly": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/particle_firefly_2f7d8e12-37e2-4eeb-9376-3c94ca25807f.webp",
+    "type": "image",
+    "aspect_ratio": [
+      384,
+      404
+    ]
+  },
+  "particle_leaf": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/particle_leaf_ad707898-8001-441c-b88d-71b9a079541e.webp",
+    "type": "image",
+    "aspect_ratio": [
+      577,
+      682
+    ]
+  },
+  "particle_butterfly": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/particle_butterfly_0735afa0-f4e3-4b87-83ba-fe6b9ba2564d.webp",
+    "type": "image",
+    "aspect_ratio": [
+      653,
+      699
+    ]
+  },
+  "icon_inventory": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/icon_inventory_f409d1b8-8b70-43ab-a112-fc4c993d1b21.webp",
+    "type": "image",
+    "aspect_ratio": [
+      747,
+      921
+    ]
+  },
+  "icon_settings": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/icon_settings_0706f353-92f0-4a4f-9619-ada61e0dc2bf.webp",
+    "type": "image",
+    "aspect_ratio": [
+      781,
+      780
+    ]
+  },
+  "background_music_lofi": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/background_music_lofi_d9c38091-0b3a-4583-b894-ebf871eee44a.mp3",
+    "type": "audio"
+  },
+  "sfx_plant_seed": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/sfx_plant_seed_b9615e85-7373-468e-b7a5-cddcbd497222.mp3",
+    "type": "audio"
+  },
+  "sfx_harvest_crop": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/sfx_harvest_crop_e0f93d2f-0112-4c80-8375-e738282db112.mp3",
+    "type": "audio"
+  },
+  "sfx_ui_open": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/sfx_ui_open_8e440788-1955-4ad0-8227-6b984faccb5f.mp3",
+    "type": "audio"
+  },
+  "sfx_ui_close": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/sfx_ui_close_52fb634e-4df9-480d-adfe-cd824c209f16.mp3",
+    "type": "audio"
+  },
+  "ambient_rest_area": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/ambient_rest_area_8af9ddf8-12b8-4c14-93bf-d9ff4dcf45df.mp3",
+    "type": "audio"
+  }
+};
