@@ -662,6 +662,33 @@
             text-align: right;
             text-shadow: 0 1px 0 rgba(255, 248, 231, 0.7);
         }
+        .minimap-panel {
+            position: absolute;
+            top: 92px;
+            right: 16px;
+            z-index: 14;
+            width: 148px;
+            padding: 8px;
+            border-radius: 14px;
+            background: rgba(255, 248, 231, 0.9);
+            border: 2px solid rgba(107, 83, 68, 0.18);
+            box-shadow: 0 6px 20px rgba(60, 40, 25, 0.18);
+            pointer-events: none;
+        }
+        .minimap-panel canvas {
+            display: block;
+            width: 132px;
+            height: 132px;
+            border-radius: 10px;
+            background: #8B9D83;
+        }
+        .minimap-label {
+            display: block;
+            margin-top: 4px;
+            color: var(--color-brown-dark);
+            font: 700 11px 'Fredoka', sans-serif;
+            text-align: center;
+        }
         /* ============================================================
            GAMEPLAY HUD — top bar + hotbar
            ============================================================ */
@@ -1550,6 +1577,16 @@
                 min-width: 0;
                 order: 3;
             }
+            .minimap-panel {
+                top: 118px;
+                right: 12px;
+                width: 124px;
+                padding: 7px;
+            }
+            .minimap-panel canvas {
+                width: 110px;
+                height: 110px;
+            }
             .time-indicator,
             .day-pill {
                 min-height: 44px;
@@ -1675,6 +1712,16 @@
             }
             .top-bar {
                 padding: 8px;
+            }
+            .minimap-panel {
+                top: 112px;
+                right: 8px;
+                width: 104px;
+                padding: 6px;
+            }
+            .minimap-panel canvas {
+                width: 92px;
+                height: 92px;
             }
             .time-indicator {
                 max-width: 46vw;
@@ -1951,6 +1998,10 @@
                     <div class="save-status" id="save-status" aria-live="polite">Autosave on</div>
                 </div>
             </div>
+            <div class="minimap-panel" aria-label="Farm minimap">
+                <canvas id="minimap-canvas" width="132" height="132"></canvas>
+                <span class="minimap-label">Farm Map</span>
+            </div>
             <!-- Corner actions -->
             <button class="icon-button hotbar-corner-btn hotbar-corner-btn--left" id="rest-button" aria-label="Rest Area">
                 🌙
@@ -2056,6 +2107,8 @@
             const ctx = canvas.getContext('2d');
             canvas.style.pointerEvents = 'none';
             const threeCanvas = document.getElementById('three-canvas');
+            const minimapCanvas = document.getElementById('minimap-canvas');
+            const minimapCtx = minimapCanvas ? minimapCanvas.getContext('2d') : null;
             const restCanvas = document.getElementById('rest-canvas');
             const restCtx = restCanvas ? restCanvas.getContext('2d') : null;
             let currentMode = mode;
@@ -4372,6 +4425,165 @@
                     metalness: 0.02
                 });
             }
+            function makeSpriteTexture(draw, w = 128, h = 128) {
+                const c = document.createElement('canvas');
+                c.width = w;
+                c.height = h;
+                const g = c.getContext('2d');
+                g.clearRect(0, 0, w, h);
+                draw(g, w, h);
+                const tex = new THREE.CanvasTexture(c);
+                tex.colorSpace = THREE.SRGBColorSpace;
+                tex.needsUpdate = true;
+                return tex;
+            }
+            function makeSprite(texture, width, height) {
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+                    map: texture,
+                    transparent: true,
+                    depthWrite: false
+                }));
+                sprite.scale.set(width, height, 1);
+                return sprite;
+            }
+            function drawCharacterTexture(g, w, h, variant) {
+                const outfit = variant === 'female' ? '#C86B8B' : '#5B8BD4';
+                const top = variant === 'female' ? '#FFF0F4' : '#F7FBFF';
+                const hair = variant === 'female' ? '#5A3524' : '#6B4423';
+                g.fillStyle = 'rgba(65, 42, 24, 0.18)';
+                g.beginPath();
+                g.ellipse(w / 2, h - 18, 28, 8, 0, 0, Math.PI * 2);
+                g.fill();
+                g.fillStyle = outfit;
+                g.roundRect(w / 2 - 22, h / 2 - 4, 44, 42, 14);
+                g.fill();
+                g.fillStyle = top;
+                g.roundRect(w / 2 - 14, h / 2 + 2, 28, 22, 8);
+                g.fill();
+                g.fillStyle = '#F5D0A8';
+                g.beginPath();
+                g.arc(w / 2, h / 2 - 26, 19, 0, Math.PI * 2);
+                g.fill();
+                g.fillStyle = hair;
+                g.beginPath();
+                g.arc(w / 2, h / 2 - 33, 19, Math.PI, 0);
+                g.fill();
+                if (variant === 'female') {
+                    g.fillRect(w / 2 - 22, h / 2 - 31, 8, 34);
+                    g.fillRect(w / 2 + 14, h / 2 - 31, 8, 34);
+                }
+                g.fillStyle = '#4A3728';
+                g.beginPath();
+                g.arc(w / 2 - 6, h / 2 - 25, 2.5, 0, Math.PI * 2);
+                g.arc(w / 2 + 6, h / 2 - 25, 2.5, 0, Math.PI * 2);
+                g.fill();
+            }
+            function drawCropTexture(g, w, h, crop) {
+                const colors = {
+                    carrot: '#F2A65A',
+                    tomato: '#D85F51',
+                    wheat: '#E6C15A',
+                    flower: '#C86B8B'
+                };
+                g.fillStyle = 'rgba(65, 42, 24, 0.15)';
+                g.beginPath();
+                g.ellipse(w / 2, h - 16, 28, 8, 0, 0, Math.PI * 2);
+                g.fill();
+                g.strokeStyle = '#4F8A4B';
+                g.lineWidth = 8;
+                g.lineCap = 'round';
+                g.beginPath();
+                g.moveTo(w / 2, h - 24);
+                g.lineTo(w / 2, h / 2 + 10);
+                g.stroke();
+                g.fillStyle = colors[crop] || colors.flower;
+                if (crop === 'wheat') {
+                    for (let i = 0; i < 5; i++) {
+                        g.beginPath();
+                        g.ellipse(w / 2 + (i - 2) * 8, h / 2 - i * 5, 8, 18, 0.25, 0, Math.PI * 2);
+                        g.fill();
+                    }
+                } else if (crop === 'flower') {
+                    for (let i = 0; i < 6; i++) {
+                        const a = i * Math.PI / 3;
+                        g.beginPath();
+                        g.ellipse(w / 2 + Math.cos(a) * 16, h / 2 + Math.sin(a) * 12, 10, 16, a, 0, Math.PI * 2);
+                        g.fill();
+                    }
+                    g.fillStyle = '#FFD699';
+                    g.beginPath();
+                    g.arc(w / 2, h / 2, 8, 0, Math.PI * 2);
+                    g.fill();
+                } else {
+                    g.beginPath();
+                    g.ellipse(w / 2, h / 2, 18, 24, 0, 0, Math.PI * 2);
+                    g.fill();
+                }
+            }
+            function drawCabinTexture(g, w, h) {
+                g.fillStyle = 'rgba(65, 42, 24, 0.18)';
+                g.beginPath();
+                g.ellipse(w / 2, h - 16, 44, 10, 0, 0, Math.PI * 2);
+                g.fill();
+                g.fillStyle = '#7A4E34';
+                g.beginPath();
+                g.moveTo(w / 2, 16);
+                g.lineTo(w - 16, 58);
+                g.lineTo(16, 58);
+                g.closePath();
+                g.fill();
+                g.fillStyle = '#A67C52';
+                g.roundRect(24, 54, w - 48, 58, 8);
+                g.fill();
+                g.fillStyle = '#65432C';
+                g.roundRect(w / 2 - 10, 78, 20, 34, 5);
+                g.fill();
+                g.fillStyle = '#FFD699';
+                g.roundRect(36, 68, 18, 16, 4);
+                g.roundRect(w - 54, 68, 18, 16, 4);
+                g.fill();
+            }
+            function addFenceZone(scene, mats) {
+                const group = new THREE.Group();
+                const postGeom = new THREE.BoxGeometry(0.16, 0.82, 0.16);
+                const railXGeom = new THREE.BoxGeometry(0.95, 0.12, 0.12);
+                const railZGeom = new THREE.BoxGeometry(0.12, 0.12, 0.95);
+                const minX = -2.45, maxX = 2.45, minZ = -7.1, maxZ = -3.45;
+                for (let x = minX; x <= maxX + 0.01; x += 0.7) {
+                    const front = new THREE.Mesh(postGeom, mats.cabin);
+                    front.position.set(x, 0.42, minZ);
+                    const back = new THREE.Mesh(postGeom, mats.cabin);
+                    back.position.set(x, 0.42, maxZ);
+                    group.add(front, back);
+                    if (x < maxX - 0.1) {
+                        const r1 = new THREE.Mesh(railXGeom, mats.cabin);
+                        r1.position.set(x + 0.35, 0.55, minZ);
+                        const r2 = new THREE.Mesh(railXGeom, mats.cabin);
+                        r2.position.set(x + 0.35, 0.55, maxZ);
+                        group.add(r1, r2);
+                    }
+                }
+                for (let z = minZ; z <= maxZ + 0.01; z += 0.7) {
+                    const left = new THREE.Mesh(postGeom, mats.cabin);
+                    left.position.set(minX, 0.42, z);
+                    const right = new THREE.Mesh(postGeom, mats.cabin);
+                    right.position.set(maxX, 0.42, z);
+                    group.add(left, right);
+                    if (z < maxZ - 0.1) {
+                        const r1 = new THREE.Mesh(railZGeom, mats.cabin);
+                        r1.position.set(minX, 0.55, z + 0.35);
+                        const r2 = new THREE.Mesh(railZGeom, mats.cabin);
+                        r2.position.set(maxX, 0.55, z + 0.35);
+                        group.add(r1, r2);
+                    }
+                }
+                group.children.forEach(m => {
+                    m.castShadow = true;
+                    m.receiveShadow = true;
+                });
+                scene.add(group);
+                return group;
+            }
             function initThreeFarm() {
                 if (threeFarm) return true;
                 if (!threeCanvas || !window.THREE) return false;
@@ -4419,6 +4631,15 @@
                     skin: makeThreeMat(0xF5D0A8),
                     pet: makeThreeMat(0xF4EEE1)
                 };
+                const spriteTextures = {
+                    playerMale: makeSpriteTexture((g, w, h) => drawCharacterTexture(g, w, h, 'male')),
+                    playerFemale: makeSpriteTexture((g, w, h) => drawCharacterTexture(g, w, h, 'female')),
+                    cabin: makeSpriteTexture(drawCabinTexture, 160, 160),
+                    carrot: makeSpriteTexture((g, w, h) => drawCropTexture(g, w, h, 'carrot')),
+                    tomato: makeSpriteTexture((g, w, h) => drawCropTexture(g, w, h, 'tomato')),
+                    wheat: makeSpriteTexture((g, w, h) => drawCropTexture(g, w, h, 'wheat')),
+                    flower: makeSpriteTexture((g, w, h) => drawCropTexture(g, w, h, 'flower'))
+                };
 
                 const meadow = new THREE.Mesh(new THREE.PlaneGeometry(42, 42), mats.meadow);
                 meadow.rotation.x = -Math.PI / 2;
@@ -4438,17 +4659,16 @@
                 scene.add(crossPath);
 
                 const cabin = new THREE.Group();
-                const cabinBody = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.7, 2.2), mats.cabin);
+                const cabinBody = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.22, 2.2), mats.cabin);
                 cabinBody.position.y = 0.95;
                 cabinBody.castShadow = true;
                 cabin.add(cabinBody);
-                const roof = new THREE.Mesh(new THREE.ConeGeometry(2.45, 1.15, 4), mats.roof);
-                roof.position.y = 2.15;
-                roof.rotation.y = Math.PI / 4;
-                roof.castShadow = true;
-                cabin.add(roof);
+                const cabinSprite = makeSprite(spriteTextures.cabin, 3.25, 3.25);
+                cabinSprite.position.set(0, 1.55, 0.16);
+                cabin.add(cabinSprite);
                 cabin.position.set(0, 0, -5.25);
                 scene.add(cabin);
+                const cabinFence = addFenceZone(scene, mats);
 
                 const plotMeshes = Array.from({ length: 9 }, () => {
                     const group = new THREE.Group();
@@ -4458,13 +4678,8 @@
                     base.receiveShadow = true;
                     group.add(base);
                     const crop = new THREE.Group();
-                    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 0.65, 8), mats.sprout);
-                    stem.position.y = 0.62;
-                    stem.castShadow = true;
-                    crop.add(stem);
-                    const fruit = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), mats.carrot);
-                    fruit.position.y = 1.05;
-                    fruit.castShadow = true;
+                    const fruit = makeSprite(spriteTextures.carrot, 1.1, 1.1);
+                    fruit.position.y = 0.9;
                     crop.add(fruit);
                     group.add(crop);
                     scene.add(group);
@@ -4472,17 +4687,15 @@
                 });
 
                 const player = new THREE.Group();
-                const playerBodyGeom = THREE.CapsuleGeometry
-                    ? new THREE.CapsuleGeometry(0.28, 0.7, 6, 10)
-                    : new THREE.CylinderGeometry(0.28, 0.34, 1.05, 12);
-                const playerBody = new THREE.Mesh(playerBodyGeom, mats.playerMale);
-                playerBody.position.y = 0.75;
-                playerBody.castShadow = true;
-                player.add(playerBody);
-                const playerHead = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12), mats.skin);
-                playerHead.position.y = 1.35;
-                playerHead.castShadow = true;
-                player.add(playerHead);
+                const playerShadow = new THREE.Mesh(new THREE.CircleGeometry(0.34, 18), makeThreeMat(0x3E2B1C));
+                playerShadow.rotation.x = -Math.PI / 2;
+                playerShadow.position.y = 0.04;
+                playerShadow.material.transparent = true;
+                playerShadow.material.opacity = 0.22;
+                player.add(playerShadow);
+                const playerSprite = makeSprite(spriteTextures.playerMale, 1.05, 1.55);
+                playerSprite.position.y = 0.98;
+                player.add(playerSprite);
                 scene.add(player);
 
                 const pet = new THREE.Group();
@@ -4497,7 +4710,10 @@
                 pet.add(petHead);
                 scene.add(pet);
 
-                threeFarm = { renderer, scene, camera, mats, plotMeshes, player, playerBody, pet, farm, decorationGroup: new THREE.Group() };
+                threeFarm = {
+                    renderer, scene, camera, mats, spriteTextures, plotMeshes,
+                    player, playerSprite, pet, farm, cabinFence, decorationGroup: new THREE.Group()
+                };
                 scene.add(threeFarm.decorationGroup);
                 
                 const decList = Array.isArray(window.gameConfig.decorations) ? window.gameConfig.decorations : [];
@@ -4547,18 +4763,19 @@
                     if (mesh.crop.visible) {
                         const stageScale = plot.growthStage === 1 ? 0.45 : plot.growthStage === 2 ? 0.72 : 1;
                         mesh.crop.scale.setScalar(stageScale);
-                        mesh.crop.rotation.y = timestamp * 0.001 + idx;
+                        mesh.crop.rotation.y = Math.sin(timestamp * 0.001 + idx) * 0.08;
                         mesh.fruit.visible = plot.growthStage === 3;
-                        mesh.fruit.material = tf.mats[plot.crop] || tf.mats.flower;
+                        mesh.fruit.material.map = tf.spriteTextures[plot.crop] || tf.spriteTextures.flower;
+                        mesh.fruit.material.needsUpdate = true;
                     }
                 });
 
                 const playerWorld = farmToWorld(PLAYER_X, PLAYER_Y);
                 tf.player.position.set(playerWorld.x, Math.sin(playerBob) * 0.05, playerWorld.z);
-                tf.player.rotation.y += 0.018;
-                tf.playerBody.material = (window.gameConfig.player.character || 'male') === 'female'
-                    ? tf.mats.playerFemale
-                    : tf.mats.playerMale;
+                tf.playerSprite.material.map = (window.gameConfig.player.character || 'male') === 'female'
+                    ? tf.spriteTextures.playerFemale
+                    : tf.spriteTextures.playerMale;
+                tf.playerSprite.material.needsUpdate = true;
 
                 const petWorld = farmToWorld(petPos.x, petPos.y);
                 tf.pet.position.set(petWorld.x, 0.05 + Math.sin(petBounce) * 0.04, petWorld.z);
@@ -4570,6 +4787,56 @@
                 tf.camera.lookAt(playerWorld.x * 0.2, 0.4, playerWorld.z * 0.2);
                 tf.renderer.render(tf.scene, tf.camera);
                 return true;
+            }
+            function drawMiniMap() {
+                if (!minimapCtx || !minimapCanvas) return;
+                const w = minimapCanvas.width;
+                const h = minimapCanvas.height;
+                const pad = 10;
+                minimapCtx.clearRect(0, 0, w, h);
+                minimapCtx.fillStyle = '#8B9D83';
+                minimapCtx.fillRect(0, 0, w, h);
+                minimapCtx.strokeStyle = 'rgba(107, 83, 68, 0.5)';
+                minimapCtx.lineWidth = 3;
+                minimapCtx.strokeRect(pad, pad, w - pad * 2, h - pad * 2);
+
+                const mapX = (x) => pad + ((x - FARM_X) / Math.max(FARM_WIDTH, 1)) * (w - pad * 2);
+                const mapY = (y) => pad + ((y - FARM_Y) / Math.max(FARM_HEIGHT, 1)) * (h - pad * 2);
+
+                minimapCtx.fillStyle = 'rgba(196, 169, 125, 0.75)';
+                minimapCtx.fillRect(w / 2 - 5, pad + 18, 10, h - pad * 2 - 24);
+                minimapCtx.fillRect(pad + 24, h * 0.55 - 5, w - pad * 2 - 48, 10);
+
+                // Cabin zone fence
+                minimapCtx.strokeStyle = '#6B4A32';
+                minimapCtx.lineWidth = 2;
+                minimapCtx.strokeRect(w / 2 - 25, pad + 5, 50, 34);
+                minimapCtx.fillStyle = '#A67C52';
+                minimapCtx.fillRect(w / 2 - 13, pad + 14, 26, 18);
+
+                window.gameConfig.soilPlots.forEach(plot => {
+                    const x = mapX(plot.x + PLOT_SIZE / 2);
+                    const y = mapY(plot.y + PLOT_SIZE / 2);
+                    minimapCtx.fillStyle = plot.crop ? '#5FA15D' : '#8B6340';
+                    minimapCtx.fillRect(x - 4, y - 4, 8, 8);
+                    if (plot.growthStage === 3) {
+                        minimapCtx.strokeStyle = '#FFD699';
+                        minimapCtx.strokeRect(x - 5, y - 5, 10, 10);
+                    }
+                });
+
+                minimapCtx.fillStyle = '#F4EEE1';
+                minimapCtx.beginPath();
+                minimapCtx.arc(mapX(petPos.x), mapY(petPos.y), 4, 0, Math.PI * 2);
+                minimapCtx.fill();
+
+                minimapCtx.fillStyle = '#5B8BD4';
+                minimapCtx.beginPath();
+                minimapCtx.arc(mapX(PLAYER_X), mapY(PLAYER_Y), 5, 0, Math.PI * 2);
+                minimapCtx.fill();
+                minimapCtx.strokeStyle = '#FFF8E7';
+                minimapCtx.lineWidth = 2;
+                minimapCtx.stroke();
             }
             // ============================================================
             // START SCREEN PARTICLES
@@ -4618,6 +4885,7 @@
                         } else if (currentScene === 'rest') {
                             renderRestScene(dt);
                         }
+                        drawMiniMap();
                     }
                 } catch (err) {
                     if (!window.__wmRenderError) {
