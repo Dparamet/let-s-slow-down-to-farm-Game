@@ -71,8 +71,22 @@
             display: block;
             width: 100%;
             height: 100%;
-            position: relative;
-            z-index: 0;
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            background: transparent;
+        }
+        #three-canvas {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: #87CEEB;
+        }
+        #three-canvas.active {
+            display: block;
         }
         /* ============================================================
            MAIN MENU — wooden cabin interior
@@ -793,6 +807,69 @@
         .hotbar-corner-btn--right {
             right: var(--space-md);
         }
+        .movement-pad {
+            position: absolute;
+            left: 50%;
+            bottom: 104px;
+            width: 168px;
+            height: 168px;
+            transform: translateX(-50%);
+            z-index: 13;
+            display: none;
+            grid-template-columns: repeat(3, 52px);
+            grid-template-rows: repeat(3, 52px);
+            place-content: center;
+            gap: 6px;
+            padding: 8px;
+            border-radius: 28px;
+            background: rgba(255, 248, 231, 0.22);
+            border: 1px solid rgba(255, 248, 231, 0.42);
+            box-shadow: 0 8px 28px rgba(60, 40, 25, 0.14);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            touch-action: none;
+            pointer-events: none;
+            user-select: none;
+        }
+        .move-btn {
+            width: 52px;
+            height: 52px;
+            border: 2px solid rgba(255, 248, 231, 0.64);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--color-brown-dark);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(60, 40, 25, 0.16);
+            transition: transform var(--transition-fast) var(--ease-out),
+                        background var(--transition-fast),
+                        box-shadow var(--transition-fast);
+            touch-action: none;
+            pointer-events: auto;
+        }
+        .move-btn:active,
+        .move-btn.active {
+            transform: translateY(2px) scale(0.96);
+            background: rgba(255, 248, 231, 0.96);
+            box-shadow: 0 2px 6px rgba(60, 40, 25, 0.2);
+        }
+        .move-btn--up { grid-column: 2; grid-row: 1; }
+        .move-btn--left { grid-column: 1; grid-row: 2; }
+        .move-btn--center {
+            grid-column: 2;
+            grid-row: 2;
+            pointer-events: none;
+            opacity: 0.42;
+            background: rgba(127, 176, 105, 0.36);
+            box-shadow: inset 0 2px 8px rgba(60, 40, 25, 0.12);
+        }
+        .move-btn--right { grid-column: 3; grid-row: 2; }
+        .move-btn--down { grid-column: 2; grid-row: 3; }
         /* ============================================================
            ICON BUTTONS
            ============================================================ */
@@ -1032,6 +1109,9 @@
             font-weight: 700;
             color: var(--color-brown-dark);
         }
+        .starter-field--wide {
+            grid-column: 1 / -1;
+        }
         .starter-field input,
         .starter-field select {
             width: 100%;
@@ -1042,9 +1122,6 @@
             color: var(--color-brown-dark);
             font: 600 15px 'Poppins', sans-serif;
             padding: 8px 10px;
-        }
-        .starter-field input[type="color"] {
-            padding: 4px;
         }
         .starter-actions {
             display: flex;
@@ -1506,6 +1583,22 @@
             .hotbar-corner-btn--left {
                 left: 12px;
             }
+            .movement-pad {
+                display: grid;
+                bottom: 158px;
+                width: 150px;
+                height: 150px;
+                grid-template-columns: repeat(3, 46px);
+                grid-template-rows: repeat(3, 46px);
+                gap: 5px;
+                border-radius: 24px;
+            }
+            .move-btn {
+                width: 46px;
+                height: 46px;
+                border-radius: 14px;
+                font-size: 19px;
+            }
             .panel {
                 border-radius: 20px;
                 padding: 18px;
@@ -1623,6 +1716,22 @@
             .hotbar-corner-btn {
                 bottom: 76px;
             }
+            .movement-pad {
+                bottom: 132px;
+                width: 132px;
+                height: 132px;
+                grid-template-columns: repeat(3, 40px);
+                grid-template-rows: repeat(3, 40px);
+                gap: 4px;
+                padding: 6px;
+                border-radius: 22px;
+            }
+            .move-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                font-size: 17px;
+            }
             .panel-title {
                 font-size: 24px;
                 margin-bottom: 16px;
@@ -1688,6 +1797,7 @@
     </style>
 </head>
 <body>
+    <script defer src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
     <script>
         /* Works before Astrocade calls run() — fixes Live Server / file:// testing */
         (function () {
@@ -1710,14 +1820,11 @@
                     });
                 }
             };
-            document.addEventListener('click', function (e) {
-                var btn = e.target && e.target.closest ? e.target.closest('#start-button') : null;
-                if (btn) window.__wmStartGame(e);
-            }, true);
         })();
     </script>
     <div id="game-world">
         <canvas id="game-canvas"></canvas>
+        <canvas id="three-canvas" aria-hidden="true"></canvas>
         <!-- Main Menu — cozy wooden cabin -->
         <div class="start-screen" id="start-screen">
             <div class="cabin-back-wall" aria-hidden="true"></div>
@@ -1758,9 +1865,9 @@
                     <div class="menu-subtitle">whispering meadows</div>
                 </div>
                 <div class="menu-buttons">
-                    <button type="button" class="menu-btn menu-btn--primary" id="start-button" onclick="window.__wmStartGame && window.__wmStartGame(event)">Start Game</button>
-                    <button type="button" class="menu-btn menu-btn--continue" id="continue-button">Save Slots</button>
-                    <button type="button" class="menu-btn menu-btn--settings" id="menu-settings-btn">Settings</button>
+                    <button type="button" class="menu-btn menu-btn--primary" id="start-button" onclick="window.__wmOpenStarter ? window.__wmOpenStarter(event) : window.__wmStartGame && window.__wmStartGame(event)">Start Game</button>
+                    <button type="button" class="menu-btn menu-btn--continue" id="continue-button" onclick="window.__wmOpenSaveSlots && window.__wmOpenSaveSlots(event)">Save Slots</button>
+                    <button type="button" class="menu-btn menu-btn--settings" id="menu-settings-btn" onclick="window.__wmOpenMenuSettings && window.__wmOpenMenuSettings(event)">Settings</button>
                 </div>
             </div>
 
@@ -1769,7 +1876,7 @@
             <div class="panel slot-panel" id="slot-panel" aria-hidden="true">
                 <h2 class="panel-title">Save Slots</h2>
                 <div class="slot-list" id="slot-list"></div>
-                <button type="button" class="close-button" id="slot-close-button">Back</button>
+                <button type="button" class="close-button" id="slot-close-button" onclick="window.__wmCloseSlots && window.__wmCloseSlots(event)">Back</button>
             </div>
 
             <div class="starter-panel" id="starter-panel" aria-hidden="true">
@@ -1782,11 +1889,11 @@
                         <label class="starter-field">Farm name
                             <input id="starter-farm-name" maxlength="22" value="Meadow Home">
                         </label>
-                        <label class="starter-field">Shirt color
-                            <input type="color" id="starter-shirt-color" value="#FFFFFF">
-                        </label>
-                        <label class="starter-field">Clothes color
-                            <input type="color" id="starter-clothes-color" value="#5B8BD4">
+                        <label class="starter-field starter-field--wide">Character
+                            <select id="starter-character">
+                                <option value="male">Male farmer</option>
+                                <option value="female">Female farmer</option>
+                            </select>
                         </label>
                         <label class="starter-field">Pet type
                             <select id="starter-pet-type">
@@ -1801,8 +1908,8 @@
                         </label>
                     </div>
                     <div class="starter-actions">
-                        <button type="button" class="close-button" id="starter-begin-button">Begin</button>
-                        <button type="button" class="close-button secondary" id="starter-cancel-button">Back</button>
+                        <button type="button" class="close-button" id="starter-begin-button" onclick="window.__wmBeginFarm && window.__wmBeginFarm(event)">Begin</button>
+                        <button type="button" class="close-button secondary" id="starter-cancel-button" onclick="window.__wmCloseStarter && window.__wmCloseStarter(event)">Back</button>
                     </div>
                 </div>
             </div>
@@ -1818,7 +1925,7 @@
                         <label><span>Sound effects</span><span id="menu-sfx-val">70%</span></label>
                         <input type="range" id="menu-sfx-slider" min="0" max="100" value="70">
                     </div>
-                    <button type="button" class="menu-settings-close" id="menu-settings-close">Done</button>
+                    <button type="button" class="menu-settings-close" id="menu-settings-close" onclick="window.__wmCloseMenuSettings && window.__wmCloseMenuSettings(event)">Done</button>
                 </div>
             </div>
         </div>
@@ -1849,6 +1956,13 @@
                 🌙
                 <span class="tooltip">Rest Area</span>
             </button>
+            <div class="movement-pad" id="movement-pad" aria-label="Move farmer">
+                <button type="button" class="move-btn move-btn--up" data-move="up" aria-label="Move up">▲</button>
+                <button type="button" class="move-btn move-btn--left" data-move="left" aria-label="Move left">◀</button>
+                <button type="button" class="move-btn move-btn--center" aria-hidden="true" tabindex="-1"></button>
+                <button type="button" class="move-btn move-btn--right" data-move="right" aria-label="Move right">▶</button>
+                <button type="button" class="move-btn move-btn--down" data-move="down" aria-label="Move down">▼</button>
+            </div>
             <!-- Bottom hotbar -->
             <div class="hotbar-wrap">
                 <div class="hotbar" id="hotbar">
@@ -1941,6 +2055,7 @@
             const canvas = document.getElementById('game-canvas');
             const ctx = canvas.getContext('2d');
             canvas.style.pointerEvents = 'none';
+            const threeCanvas = document.getElementById('three-canvas');
             const restCanvas = document.getElementById('rest-canvas');
             const restCtx = restCanvas ? restCanvas.getContext('2d') : null;
             let currentMode = mode;
@@ -1951,6 +2066,7 @@
             let autoSaveTimer = null;
             let activeSaveSlot = null;
             const SAVE_SLOT_COUNT = 3;
+            let threeFarm = null;
 
             function gameLog(message) {
                 if (typeof lib !== 'undefined' && lib.log) lib.log(message);
@@ -1962,15 +2078,18 @@
                     growthSpeedMultiplier: 1
                 },
                 soilPlots: [],
-                decorations: {
-                    tree: { visible: true, x: 100, y: 200 },
-                    fence: { visible: true, x: 300, y: 150 },
-                    flowerPatch: { visible: true, x: 500, y: 250 }
-                },
+                decorations: [
+                    { type: 'tree', x: 100, y: 180, visible: true },
+                    { type: 'tree', x: 500, y: 160, visible: true },
+                    { type: 'fence', x: 300, y: 150, visible: true },
+                    { type: 'fence', x: 400, y: 150, visible: true },
+                    { type: 'flowerPatch', x: 50, y: 300, visible: true },
+                    { type: 'flowerPatch', x: 550, y: 400, visible: true },
+                    { type: 'tree', x: 50, y: 480, visible: true }
+                ],
                 player: {
                     name: 'Mellow',
-                    shirtColor: '#FFFFFF',
-                    clothesColor: '#5B8BD4'
+                    character: 'male'
                 },
                 farm: { name: 'Meadow Home' },
                 pet: { type: 'bunny', name: 'Clover', speed: 1 },
@@ -2015,6 +2134,15 @@
                 const h = Math.max(1, Math.floor(rect.height) || gameWorld.clientHeight || 1);
                 canvas.width = w;
                 canvas.height = h;
+                if (threeCanvas) {
+                    threeCanvas.width = w;
+                    threeCanvas.height = h;
+                }
+                if (threeFarm && threeFarm.renderer && threeFarm.camera) {
+                    threeFarm.renderer.setSize(w, h, false);
+                    threeFarm.camera.aspect = w / h;
+                    threeFarm.camera.updateProjectionMatrix();
+                }
                 if (restCanvas) {
                     restCanvas.width = w;
                     restCanvas.height = h;
@@ -2330,9 +2458,6 @@
                         key: 'atmosphere.particleDensity',
                         type: 'slider', min: 0, max: 2, step: 0.1
                     },
-                    'Show Tree': { key: 'decorations.tree.visible', type: 'checkbox' },
-                    'Show Fence': { key: 'decorations.fence.visible', type: 'checkbox' },
-                    'Show Flower Patch': { key: 'decorations.flowerPatch.visible', type: 'checkbox' },
                     'Music Volume': {
                         key: 'audio.musicVolume',
                         type: 'slider', min: 0, max: 1, step: 0.1,
@@ -2370,37 +2495,70 @@
             function setSaveStatus(text) {
                 if (saveStatusEl) saveStatusEl.textContent = text;
             }
-            function slotKey(slot) {
-                return 'whisperingMeadowsSaveSlot' + slot;
-            }
-            function readSaveSlot(slot) {
-                if (typeof localStorage === 'undefined') return null;
+            // Unified save state helpers (no localStorage)
+            async function loadUnifiedState() {
                 try {
-                    const raw = localStorage.getItem(slotKey(slot));
-                    return raw ? JSON.parse(raw) : null;
+                    if (typeof lib !== 'undefined' && lib.getUserGameState) {
+                        const response = await lib.getUserGameState();
+                        if (response && response.state) {
+                            return response.state;
+                        }
+                    }
+                    return { activeSaveSlot: null, slots: {} };
+                } catch (err) {
+                    gameLog('Load unified state error: ' + (err && err.message ? err.message : err));
+                    return { activeSaveSlot: null, slots: {} };
+                }
+            }
+            async function saveUnifiedState(unifiedState) {
+                try {
+                    if (typeof lib !== 'undefined' && lib.saveUserGameState) {
+                        await lib.saveUserGameState(unifiedState);
+                    }
+                } catch (err) {
+                    gameLog('Save unified state error: ' + (err && err.message ? err.message : err));
+                    throw err;
+                }
+            }
+            async function readSaveSlot(slot) {
+                try {
+                    const unified = await loadUnifiedState();
+                    return unified.slots && unified.slots[slot] ? unified.slots[slot] : null;
                 } catch (err) {
                     return null;
                 }
             }
-            function writeSaveSlot(slot, state) {
-                if (typeof localStorage !== 'undefined') {
-                    localStorage.setItem(slotKey(slot), JSON.stringify(state));
+            async function writeSaveSlot(slot, state) {
+                const unified = await loadUnifiedState();
+                if (!unified.slots) unified.slots = {};
+                unified.slots[slot] = state;
+                unified.activeSaveSlot = slot;
+                await saveUnifiedState(unified);
+            }
+            async function clearSaveSlot(slot) {
+                const unified = await loadUnifiedState();
+                if (unified.slots && unified.slots[slot]) {
+                    unified.slots[slot] = null;
+                    delete unified.slots[slot];
+                    if (unified.activeSaveSlot === slot) {
+                        unified.activeSaveSlot = null;
+                    }
+                    await saveUnifiedState(unified);
                 }
             }
-            function clearSaveSlot(slot) {
-                if (typeof localStorage !== 'undefined') {
-                    localStorage.removeItem(slotKey(slot));
-                }
-            }
-            function getAllSaveSlots() {
+            async function getAllSaveSlots() {
+                const unified = await loadUnifiedState();
                 const slots = {};
-                for (let i = 1; i <= SAVE_SLOT_COUNT; i++) slots[i] = readSaveSlot(i);
+                for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
+                    slots[i] = unified.slots && unified.slots[i] ? unified.slots[i] : null;
+                }
                 return slots;
             }
-            function pickSaveSlot() {
+            async function pickSaveSlot() {
                 if (activeSaveSlot) return activeSaveSlot;
+                const allSlots = await getAllSaveSlots();
                 for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
-                    if (!readSaveSlot(i)) return i;
+                    if (!allSlots[i]) return i;
                 }
                 return 1;
             }
@@ -2425,16 +2583,10 @@
                 }
                 saveInFlight = true;
                 setSaveStatus(reason === 'auto' ? 'Autosaving...' : 'Saving...');
-                activeSaveSlot = pickSaveSlot();
-                const state = getSaveState();
                 try {
-                    writeSaveSlot(activeSaveSlot, state);
-                    if (typeof lib !== 'undefined' && lib.saveUserGameState) {
-                        await lib.saveUserGameState({
-                            activeSaveSlot,
-                            slots: getAllSaveSlots()
-                        });
-                    }
+                    activeSaveSlot = await pickSaveSlot();
+                    const state = getSaveState();
+                    await writeSaveSlot(activeSaveSlot, state);
                     saveDirty = false;
                     setSaveStatus((reason === 'auto' ? 'Autosaved' : 'Saved') + ' S' + activeSaveSlot);
                     if (reason !== 'auto') showToast('Game saved 💾');
@@ -2455,7 +2607,11 @@
             }
             function startAutoSave() {
                 if (autoSaveTimer) return;
-                setSaveStatus('Autosave S' + pickSaveSlot());
+                pickSaveSlot().then(slot => {
+                    setSaveStatus('Autosave S' + slot);
+                }).catch(() => {
+                    setSaveStatus('Autosave on');
+                });
                 autoSaveTimer = setInterval(() => {
                     if (gameStarted && saveDirty) void saveGame('auto');
                 }, 30000);
@@ -2602,39 +2758,52 @@
             }
             function renderSaveSlots() {
                 slotList.innerHTML = '';
-                for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
-                    const state = readSaveSlot(i);
-                    const card = document.createElement('div');
-                    card.className = 'slot-card';
-                    const info = document.createElement('div');
-                    const title = document.createElement('div');
-                    title.className = 'slot-title';
-                    title.textContent = `Slot ${i}`;
-                    const meta = document.createElement('div');
-                    meta.className = 'slot-meta';
-                    meta.textContent = slotMetaText(state);
-                    info.appendChild(title);
-                    info.appendChild(meta);
-                    const actions = document.createElement('div');
-                    actions.className = 'slot-actions';
-                    const loadBtn = document.createElement('button');
-                    loadBtn.type = 'button';
-                    loadBtn.className = 'slot-action-btn';
-                    loadBtn.textContent = state ? 'Load' : 'Empty';
-                    loadBtn.disabled = !state;
-                    loadBtn.addEventListener('click', () => loadSaveSlot(i));
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.type = 'button';
-                    deleteBtn.className = 'slot-action-btn delete';
-                    deleteBtn.textContent = 'Delete';
-                    deleteBtn.disabled = !state;
-                    deleteBtn.addEventListener('click', () => deleteSaveSlot(i));
-                    actions.appendChild(loadBtn);
-                    actions.appendChild(deleteBtn);
-                    card.appendChild(info);
-                    card.appendChild(actions);
-                    slotList.appendChild(card);
-                }
+                // Show loading state
+                const loading = document.createElement('div');
+                loading.textContent = 'Loading save slots...';
+                loading.style.textAlign = 'center';
+                loading.style.padding = '20px';
+                slotList.appendChild(loading);
+                
+                getAllSaveSlots().then(allSlots => {
+                    slotList.innerHTML = '';
+                    for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
+                        const state = allSlots[i];
+                        const card = document.createElement('div');
+                        card.className = 'slot-card';
+                        const info = document.createElement('div');
+                        const title = document.createElement('div');
+                        title.className = 'slot-title';
+                        title.textContent = `Slot ${i}`;
+                        const meta = document.createElement('div');
+                        meta.className = 'slot-meta';
+                        meta.textContent = slotMetaText(state);
+                        info.appendChild(title);
+                        info.appendChild(meta);
+                        const actions = document.createElement('div');
+                        actions.className = 'slot-actions';
+                        const loadBtn = document.createElement('button');
+                        loadBtn.type = 'button';
+                        loadBtn.className = 'slot-action-btn';
+                        loadBtn.textContent = state ? 'Load' : 'Empty';
+                        loadBtn.disabled = !state;
+                        loadBtn.addEventListener('click', () => loadSaveSlot(i));
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.type = 'button';
+                        deleteBtn.className = 'slot-action-btn delete';
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.disabled = !state;
+                        deleteBtn.addEventListener('click', () => deleteSaveSlot(i));
+                        actions.appendChild(loadBtn);
+                        actions.appendChild(deleteBtn);
+                        card.appendChild(info);
+                        card.appendChild(actions);
+                        slotList.appendChild(card);
+                    }
+                }).catch(err => {
+                    slotList.innerHTML = '<div style="text-align:center;padding:20px;color:#D85F51;">Failed to load save slots</div>';
+                    gameLog('Render slots error: ' + (err && err.message ? err.message : err));
+                });
             }
             function openSaveSlots() {
                 closeStarterSetup();
@@ -2646,19 +2815,27 @@
                 playSound('sfx_ui_open', window.gameConfig.audio.sfxVolume);
             }
             function loadSaveSlot(slot) {
-                const state = readSaveSlot(slot);
-                if (!state) return;
-                activeSaveSlot = slot;
-                if (applySaveState(state)) {
-                    closeSlotPanel(true);
-                    hideMenuAndStart();
-                }
+                readSaveSlot(slot).then(state => {
+                    if (!state) return;
+                    activeSaveSlot = slot;
+                    if (applySaveState(state)) {
+                        closeSlotPanel(true);
+                        hideMenuAndStart();
+                    }
+                }).catch(err => {
+                    gameLog('Load slot error: ' + (err && err.message ? err.message : err));
+                    showToast('Failed to load save slot');
+                });
             }
             function deleteSaveSlot(slot) {
-                clearSaveSlot(slot);
-                if (activeSaveSlot === slot) activeSaveSlot = null;
-                renderSaveSlots();
-                void checkForSavedGame().catch(() => {});
+                clearSaveSlot(slot).then(() => {
+                    if (activeSaveSlot === slot) activeSaveSlot = null;
+                    renderSaveSlots();
+                    void checkForSavedGame().catch(() => {});
+                }).catch(err => {
+                    gameLog('Delete slot error: ' + (err && err.message ? err.message : err));
+                    showToast('Failed to delete save slot');
+                });
             }
             function getPetEmoji() {
                 const type = window.gameConfig.pet.type || 'bunny';
@@ -2890,16 +3067,14 @@
             function syncStarterForm() {
                 document.getElementById('starter-player-name').value = window.gameConfig.player.name || 'Mellow';
                 document.getElementById('starter-farm-name').value = window.gameConfig.farm.name || 'Meadow Home';
-                document.getElementById('starter-shirt-color').value = window.gameConfig.player.shirtColor || '#FFFFFF';
-                document.getElementById('starter-clothes-color').value = window.gameConfig.player.clothesColor || '#5B8BD4';
+                document.getElementById('starter-character').value = window.gameConfig.player.character || 'male';
                 document.getElementById('starter-pet-type').value = window.gameConfig.pet.type || 'bunny';
                 document.getElementById('starter-pet-name').value = window.gameConfig.pet.name || 'Clover';
             }
             function applyStarterForm() {
                 window.gameConfig.player.name = (document.getElementById('starter-player-name').value || 'Mellow').trim().slice(0, 18);
                 window.gameConfig.farm.name = (document.getElementById('starter-farm-name').value || 'Meadow Home').trim().slice(0, 22);
-                window.gameConfig.player.shirtColor = document.getElementById('starter-shirt-color').value || '#FFFFFF';
-                window.gameConfig.player.clothesColor = document.getElementById('starter-clothes-color').value || '#5B8BD4';
+                window.gameConfig.player.character = document.getElementById('starter-character').value || 'male';
                 window.gameConfig.pet.type = document.getElementById('starter-pet-type').value || 'bunny';
                 window.gameConfig.pet.name = (document.getElementById('starter-pet-name').value || 'Clover').trim().slice(0, 18);
                 updateGameDayDisplay();
@@ -2953,10 +3128,29 @@
 
             function onMenuButtonActivate(handler) {
                 return (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
+                    if (e && e.__wmHandled) return;
+                    if (e) e.__wmHandled = true;
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
                     handler();
                 };
+            }
+            function bindMenuButton(button, handler) {
+                if (!button) return;
+                const activate = onMenuButtonActivate(handler);
+                button.addEventListener('click', activate);
+                button.addEventListener('touchend', activate);
+            }
+            function exposeMenuActions() {
+                window.__wmOpenStarter = onMenuButtonActivate(openStarterSetup);
+                window.__wmOpenSaveSlots = onMenuButtonActivate(openSaveSlots);
+                window.__wmOpenMenuSettings = onMenuButtonActivate(openMenuSettings);
+                window.__wmCloseMenuSettings = onMenuButtonActivate(closeMenuSettings);
+                window.__wmBeginFarm = onMenuButtonActivate(startNewGameFromSetup);
+                window.__wmCloseStarter = onMenuButtonActivate(closeStarterSetup);
+                window.__wmCloseSlots = onMenuButtonActivate(() => closeSlotPanel());
             }
 
             function attachMenuHandlers() {
@@ -2967,22 +3161,23 @@
                 const settingsClose = document.getElementById('menu-settings-close');
                 const musicToggle = document.getElementById('menu-music-toggle');
 
-                startBtn.addEventListener('click', onMenuButtonActivate(openStarterSetup));
-                continueButton.addEventListener('click', onMenuButtonActivate(openSaveSlots));
-                settingsBtn.addEventListener('click', onMenuButtonActivate(openMenuSettings));
-                settingsCorner.addEventListener('click', onMenuButtonActivate(openMenuSettings));
-                settingsClose.addEventListener('click', onMenuButtonActivate(closeMenuSettings));
-                document.getElementById('starter-begin-button').addEventListener('click', onMenuButtonActivate(startNewGameFromSetup));
-                document.getElementById('starter-cancel-button').addEventListener('click', onMenuButtonActivate(closeStarterSetup));
-                document.getElementById('slot-close-button').addEventListener('click', onMenuButtonActivate(() => closeSlotPanel()));
+                exposeMenuActions();
+                bindMenuButton(startBtn, openStarterSetup);
+                bindMenuButton(continueButton, openSaveSlots);
+                bindMenuButton(settingsBtn, openMenuSettings);
+                bindMenuButton(settingsCorner, openMenuSettings);
+                bindMenuButton(settingsClose, closeMenuSettings);
+                bindMenuButton(document.getElementById('starter-begin-button'), startNewGameFromSetup);
+                bindMenuButton(document.getElementById('starter-cancel-button'), closeStarterSetup);
+                bindMenuButton(document.getElementById('slot-close-button'), () => closeSlotPanel());
                 menuSettingsPanel.addEventListener('click', (e) => {
                     if (e.target === menuSettingsPanel) closeMenuSettings();
                 });
-                musicToggle.addEventListener('click', onMenuButtonActivate(() => {
+                bindMenuButton(musicToggle, () => {
                     menuMusicMuted = !menuMusicMuted;
                     if (bgMusicGain) bgMusicGain.gain.value = menuMusicMuted ? 0 : window.gameConfig.audio.musicVolume;
                     musicToggle.textContent = menuMusicMuted ? '🔇' : '🎵';
-                }));
+                });
                 document.getElementById('menu-music-slider').addEventListener('input', (e) => {
                     const v = Number(e.target.value) / 100;
                     window.gameConfig.audio.musicVolume = v;
@@ -3000,8 +3195,9 @@
             async function checkForSavedGame() {
                 try {
                     hasSavedGame = false;
+                    const allSlots = await getAllSaveSlots();
                     for (let i = 1; i <= SAVE_SLOT_COUNT; i++) {
-                        if (readSaveSlot(i)) hasSavedGame = true;
+                        if (allSlots[i]) hasSavedGame = true;
                     }
                     continueBtn.disabled = false;
                 } catch (e) {
@@ -3040,6 +3236,7 @@
             document.getElementById('close-seed-panel').addEventListener('click', () => closeSeedPanel());
             document.getElementById('inventory-button').addEventListener('click', toggleInventory);
             setupHotbar();
+            setupMovementPad();
             document.getElementById('close-inventory-panel').addEventListener('click', toggleInventory);
             document.getElementById('rest-button').addEventListener('click', transitionToRestArea);
             document.getElementById('return-button').addEventListener('click', returnToFarm);
@@ -3190,6 +3387,41 @@
                 if (k === 's' || k === 'arrowdown') playerInput.down = down;
                 if (k === 'a' || k === 'arrowleft') playerInput.left = down;
                 if (k === 'd' || k === 'arrowright') playerInput.right = down;
+            }
+            function setMoveDirection(direction, down) {
+                if (!direction || !(direction in playerInput)) return;
+                playerInput[direction] = down;
+                if (down) playerTarget = null;
+            }
+            function setupMovementPad() {
+                const pad = document.getElementById('movement-pad');
+                if (!pad) return;
+                const release = (btn) => {
+                    const direction = btn && btn.dataset ? btn.dataset.move : null;
+                    if (!direction) return;
+                    btn.classList.remove('active');
+                    setMoveDirection(direction, false);
+                };
+                pad.querySelectorAll('[data-move]').forEach(btn => {
+                    const press = (e) => {
+                        e.preventDefault();
+                        const direction = btn.dataset.move;
+                        btn.classList.add('active');
+                        setMoveDirection(direction, true);
+                    };
+                    btn.addEventListener('pointerdown', press);
+                    btn.addEventListener('pointerup', (e) => {
+                        e.preventDefault();
+                        release(btn);
+                    });
+                    btn.addEventListener('pointercancel', () => release(btn));
+                    btn.addEventListener('pointerleave', () => release(btn));
+                    btn.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') press(e);
+                    });
+                    btn.addEventListener('keyup', () => release(btn));
+                });
+                pad.addEventListener('contextmenu', (e) => e.preventDefault());
             }
             document.addEventListener('keydown', (e) => {
                 setMoveKey(e.key, true);
@@ -3647,8 +3879,10 @@
                 const x = PLAYER_X;
                 const y = PLAYER_Y + bob;
                 const s = Math.max(0.85, FARM_WIDTH / 600);
-                const clothesColor = window.gameConfig.player.clothesColor || '#5B8BD4';
-                const shirtColor = window.gameConfig.player.shirtColor || '#FFFFFF';
+                const character = window.gameConfig.player.character || 'male';
+                const outfitColor = character === 'female' ? '#C86B8B' : '#5B8BD4';
+                const topColor = character === 'female' ? '#FFF0F4' : '#F7FBFF';
+                const hairColor = character === 'female' ? '#5A3524' : '#6B4423';
                 ctx.save();
                 ctx.translate(x, y);
                 // Soft shadow
@@ -3661,12 +3895,12 @@
                 ctx.fillRect(-10 * s, 8 * s, 8 * s, 14 * s);
                 ctx.fillRect(2 * s, 8 * s, 8 * s, 14 * s);
                 // Body / overalls
-                ctx.fillStyle = clothesColor;
+                ctx.fillStyle = outfitColor;
                 ctx.fillRect(-14 * s, -6 * s, 28 * s, 18 * s);
-                ctx.fillStyle = shirtColor;
+                ctx.fillStyle = topColor;
                 ctx.fillRect(-10 * s, -4 * s, 20 * s, 12 * s);
                 // Straps
-                ctx.fillStyle = clothesColor;
+                ctx.fillStyle = outfitColor;
                 ctx.fillRect(-10 * s, -6 * s, 5 * s, 10 * s);
                 ctx.fillRect(5 * s, -6 * s, 5 * s, 10 * s);
                 // Head
@@ -3675,10 +3909,16 @@
                 ctx.arc(0, -14 * s, 12 * s, 0, Math.PI * 2);
                 ctx.fill();
                 // Hair
-                ctx.fillStyle = '#6B4423';
+                ctx.fillStyle = hairColor;
                 ctx.beginPath();
                 ctx.arc(0, -18 * s, 11 * s, Math.PI, 0);
                 ctx.fill();
+                if (character === 'female') {
+                    ctx.beginPath();
+                    ctx.ellipse(-9 * s, -8 * s, 4 * s, 10 * s, -0.2, 0, Math.PI * 2);
+                    ctx.ellipse(9 * s, -8 * s, 4 * s, 10 * s, 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
                 // Eyes
                 ctx.fillStyle = '#4A3728';
                 ctx.beginPath();
@@ -3798,21 +4038,29 @@
             function renderDecorations() {
                 const decs = window.gameConfig.decorations;
                 const scale = FARM_WIDTH / 600;
-                if (decs.tree.visible && assetCache['decorative_tree_small']) {
-                    const tx = FARM_X + decs.tree.x * scale;
-                    const ty = FARM_Y + decs.tree.y * scale;
-                    drawImageContain(assetCache['decorative_tree_small'].img, tx, ty, 80 * scale, 100 * scale);
-                }
-                if (decs.fence.visible && assetCache['decorative_fence']) {
-                    const fx = FARM_X + decs.fence.x * scale;
-                    const fy = FARM_Y + decs.fence.y * scale;
-                    drawImageContain(assetCache['decorative_fence'].img, fx, fy, 100 * scale, 50 * scale);
-                }
-                if (decs.flowerPatch.visible && assetCache['decorative_flower_patch']) {
-                    const fpx = FARM_X + decs.flowerPatch.x * scale;
-                    const fpy = FARM_Y + decs.flowerPatch.y * scale;
-                    drawImageContain(assetCache['decorative_flower_patch'].img, fpx, fpy, 70 * scale, 70 * scale);
-                }
+                const list = Array.isArray(decs) ? decs : [];
+                
+                list.forEach(dec => {
+                    if (!dec.visible) return;
+                    let assetId = '';
+                    let dw = 80;
+                    let dh = 100;
+                    if (dec.type === 'tree') {
+                        assetId = 'decorative_tree_small';
+                    } else if (dec.type === 'fence') {
+                        assetId = 'decorative_fence';
+                        dw = 100; dh = 50;
+                    } else if (dec.type === 'flowerPatch') {
+                        assetId = 'decorative_flower_patch';
+                        dw = 70; dh = 70;
+                    }
+
+                    if (assetId && assetCache[assetId]) {
+                        const tx = FARM_X + dec.x * scale;
+                        const ty = FARM_Y + dec.y * scale;
+                        drawImageContain(assetCache[assetId].img, tx, ty, dw * scale, dh * scale);
+                    }
+                });
             }
             function renderPlots(timestamp) {
                 window.gameConfig.soilPlots.forEach((plot, idx) => {
@@ -4107,6 +4355,223 @@
                 });
             }
             // ============================================================
+            // LOW-POLY 3D FARM VIEW (Three.js, fallback-safe)
+            // ============================================================
+            function farmToWorld(x, y) {
+                const relX = (x - FARM_X) / Math.max(FARM_WIDTH, 1);
+                const relY = (y - FARM_Y) / Math.max(FARM_HEIGHT, 1);
+                return {
+                    x: (relX - 0.5) * 12,
+                    z: (relY - 0.5) * 15
+                };
+            }
+            function makeThreeMat(color, roughness) {
+                return new THREE.MeshStandardMaterial({
+                    color,
+                    roughness: roughness == null ? 0.82 : roughness,
+                    metalness: 0.02
+                });
+            }
+            function initThreeFarm() {
+                if (threeFarm) return true;
+                if (!threeCanvas || !window.THREE) return false;
+                let renderer;
+                try {
+                    renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, antialias: true, alpha: false });
+                } catch (err) {
+                    threeCanvas.classList.remove('active');
+                    return false;
+                }
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                renderer.setSize(canvas.width || 1, canvas.height || 1, false);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+                const scene = new THREE.Scene();
+                scene.fog = new THREE.Fog(0xB8D4E8, 16, 34);
+                const camera = new THREE.PerspectiveCamera(42, (canvas.width || 1) / (canvas.height || 1), 0.1, 80);
+                camera.position.set(0, 11, 13);
+                camera.lookAt(0, 0, 0);
+
+                scene.add(new THREE.HemisphereLight(0xFFF4D6, 0x6A7D58, 1.45));
+                const sun = new THREE.DirectionalLight(0xFFF1C4, 1.75);
+                sun.position.set(-6, 11, 7);
+                sun.castShadow = true;
+                sun.shadow.mapSize.width = 1024;
+                sun.shadow.mapSize.height = 1024;
+                scene.add(sun);
+
+                const mats = {
+                    meadow: makeThreeMat(0x9FB78D),
+                    farm: makeThreeMat(0x7FA15F),
+                    soil: makeThreeMat(0x8B6340),
+                    soilReady: makeThreeMat(0x6B4A32),
+                    path: makeThreeMat(0xC4A97D),
+                    carrot: makeThreeMat(0xF2A65A),
+                    tomato: makeThreeMat(0xD85F51),
+                    wheat: makeThreeMat(0xE6C15A),
+                    flower: makeThreeMat(0xC86B8B),
+                    sprout: makeThreeMat(0x5FA15D),
+                    cabin: makeThreeMat(0xA67C52),
+                    roof: makeThreeMat(0x7A4E34),
+                    playerMale: makeThreeMat(0x5B8BD4),
+                    playerFemale: makeThreeMat(0xC86B8B),
+                    skin: makeThreeMat(0xF5D0A8),
+                    pet: makeThreeMat(0xF4EEE1)
+                };
+
+                const meadow = new THREE.Mesh(new THREE.PlaneGeometry(42, 42), mats.meadow);
+                meadow.rotation.x = -Math.PI / 2;
+                meadow.receiveShadow = true;
+                scene.add(meadow);
+
+                const farm = new THREE.Mesh(new THREE.BoxGeometry(12.4, 0.16, 15.4), mats.farm);
+                farm.position.y = 0.02;
+                farm.receiveShadow = true;
+                scene.add(farm);
+
+                const path = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 12.5), mats.path);
+                path.position.y = 0.12;
+                scene.add(path);
+                const crossPath = new THREE.Mesh(new THREE.BoxGeometry(8.5, 0.055, 0.9), mats.path);
+                crossPath.position.set(0, 0.13, 1.1);
+                scene.add(crossPath);
+
+                const cabin = new THREE.Group();
+                const cabinBody = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.7, 2.2), mats.cabin);
+                cabinBody.position.y = 0.95;
+                cabinBody.castShadow = true;
+                cabin.add(cabinBody);
+                const roof = new THREE.Mesh(new THREE.ConeGeometry(2.45, 1.15, 4), mats.roof);
+                roof.position.y = 2.15;
+                roof.rotation.y = Math.PI / 4;
+                roof.castShadow = true;
+                cabin.add(roof);
+                cabin.position.set(0, 0, -5.25);
+                scene.add(cabin);
+
+                const plotMeshes = Array.from({ length: 9 }, () => {
+                    const group = new THREE.Group();
+                    const base = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.18, 1.35), mats.soil);
+                    base.position.y = 0.2;
+                    base.castShadow = true;
+                    base.receiveShadow = true;
+                    group.add(base);
+                    const crop = new THREE.Group();
+                    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 0.65, 8), mats.sprout);
+                    stem.position.y = 0.62;
+                    stem.castShadow = true;
+                    crop.add(stem);
+                    const fruit = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), mats.carrot);
+                    fruit.position.y = 1.05;
+                    fruit.castShadow = true;
+                    crop.add(fruit);
+                    group.add(crop);
+                    scene.add(group);
+                    return { group, base, crop, fruit };
+                });
+
+                const player = new THREE.Group();
+                const playerBodyGeom = THREE.CapsuleGeometry
+                    ? new THREE.CapsuleGeometry(0.28, 0.7, 6, 10)
+                    : new THREE.CylinderGeometry(0.28, 0.34, 1.05, 12);
+                const playerBody = new THREE.Mesh(playerBodyGeom, mats.playerMale);
+                playerBody.position.y = 0.75;
+                playerBody.castShadow = true;
+                player.add(playerBody);
+                const playerHead = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 12), mats.skin);
+                playerHead.position.y = 1.35;
+                playerHead.castShadow = true;
+                player.add(playerHead);
+                scene.add(player);
+
+                const pet = new THREE.Group();
+                const petBody = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 10), mats.pet);
+                petBody.scale.set(1.15, 0.8, 0.85);
+                petBody.position.y = 0.38;
+                petBody.castShadow = true;
+                pet.add(petBody);
+                const petHead = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8), mats.pet);
+                petHead.position.set(0.22, 0.6, -0.06);
+                petHead.castShadow = true;
+                pet.add(petHead);
+                scene.add(pet);
+
+                threeFarm = { renderer, scene, camera, mats, plotMeshes, player, playerBody, pet, farm, decorationGroup: new THREE.Group() };
+                scene.add(threeFarm.decorationGroup);
+                
+                const decList = Array.isArray(window.gameConfig.decorations) ? window.gameConfig.decorations : [];
+                decList.forEach(dec => {
+                    if (!dec.visible) return;
+                    const pos = farmToWorld(FARM_X + dec.x * (FARM_WIDTH/600), FARM_Y + dec.y * (FARM_HEIGHT/900));
+                    let mesh;
+                    if (dec.type === 'tree') {
+                        mesh = new THREE.Group();
+                        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 1.2, 8), mats.cabin);
+                        trunk.position.y = 0.6;
+                        mesh.add(trunk);
+                        const leaves = new THREE.Mesh(new THREE.SphereGeometry(0.8, 12, 10), mats.sprout);
+                        leaves.position.y = 1.6;
+                        mesh.add(leaves);
+                    } else if (dec.type === 'fence') {
+                        mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 0.1), mats.cabin);
+                        mesh.position.y = 0.3;
+                    } else if (dec.type === 'flowerPatch') {
+                        mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.1, 12), mats.flower);
+                        mesh.position.y = 0.05;
+                    }
+                    if (mesh) {
+                        mesh.position.set(pos.x, mesh.position.y || 0, pos.z);
+                        mesh.castShadow = true;
+                        mesh.receiveShadow = true;
+                        threeFarm.decorationGroup.add(mesh);
+                    }
+                });
+                
+                threeCanvas.classList.add('active');
+                return true;
+            }
+            function renderThreeFarm(timestamp) {
+                if (!initThreeFarm()) return false;
+                const tf = threeFarm;
+                tf.scene.background = new THREE.Color(getSkyColor());
+                tf.farm.material.color.set(window.gameConfig.colorPalette.grass || '#8B9D83');
+
+                window.gameConfig.soilPlots.forEach((plot, idx) => {
+                    const mesh = tf.plotMeshes[idx];
+                    if (!mesh) return;
+                    const pos = farmToWorld(plot.x + PLOT_SIZE / 2, plot.y + PLOT_SIZE / 2);
+                    mesh.group.position.set(pos.x, 0, pos.z);
+                    mesh.base.material = plot.growthStage === 3 ? tf.mats.soilReady : tf.mats.soil;
+                    mesh.crop.visible = !!plot.crop && plot.growthStage > 0;
+                    if (mesh.crop.visible) {
+                        const stageScale = plot.growthStage === 1 ? 0.45 : plot.growthStage === 2 ? 0.72 : 1;
+                        mesh.crop.scale.setScalar(stageScale);
+                        mesh.crop.rotation.y = timestamp * 0.001 + idx;
+                        mesh.fruit.visible = plot.growthStage === 3;
+                        mesh.fruit.material = tf.mats[plot.crop] || tf.mats.flower;
+                    }
+                });
+
+                const playerWorld = farmToWorld(PLAYER_X, PLAYER_Y);
+                tf.player.position.set(playerWorld.x, Math.sin(playerBob) * 0.05, playerWorld.z);
+                tf.player.rotation.y += 0.018;
+                tf.playerBody.material = (window.gameConfig.player.character || 'male') === 'female'
+                    ? tf.mats.playerFemale
+                    : tf.mats.playerMale;
+
+                const petWorld = farmToWorld(petPos.x, petPos.y);
+                tf.pet.position.set(petWorld.x, 0.05 + Math.sin(petBounce) * 0.04, petWorld.z);
+
+                const targetX = playerWorld.x * 0.18;
+                const targetZ = playerWorld.z * 0.12;
+                tf.camera.position.x += (targetX - tf.camera.position.x) * 0.04;
+                tf.camera.position.z += (13 + targetZ - tf.camera.position.z) * 0.04;
+                tf.camera.lookAt(playerWorld.x * 0.2, 0.4, playerWorld.z * 0.2);
+                tf.renderer.render(tf.scene, tf.camera);
+                return true;
+            }
+            // ============================================================
             // START SCREEN PARTICLES
             // ============================================================
             let startParticles = Array.from({ length: 12 }, () => ({
@@ -4146,8 +4611,10 @@
                         if (gameStarted || currentMode === 'edit') update(dt);
                         if (currentScene === 'farm') {
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
-                            renderSky(dt);
-                            renderFarm(dt, timestamp);
+                            if (!renderThreeFarm(timestamp)) {
+                                renderSky(dt);
+                                renderFarm(dt, timestamp);
+                            }
                         } else if (currentScene === 'rest') {
                             renderRestScene(dt);
                         }
@@ -4222,11 +4689,12 @@
                 window.gameConfig = {
                     crops: { available: ['carrot', 'tomato', 'wheat', 'flower'], growthSpeedMultiplier: 1 },
                     soilPlots: [],
-                    decorations: {
-                        tree: { visible: true, x: 100, y: 200 },
-                        fence: { visible: true, x: 300, y: 150 },
-                        flowerPatch: { visible: true, x: 500, y: 250 }
-                    },
+                    decorations: [
+                        { type: 'tree', x: 100, y: 180, visible: true },
+                        { type: 'tree', x: 500, y: 160, visible: true },
+                        { type: 'fence', x: 300, y: 150, visible: true },
+                        { type: 'flowerPatch', x: 50, y: 300, visible: true }
+                    ],
                     pet: { type: 'bunny', speed: 1 },
                     atmosphere: { timeOfDay: 'afternoon', cycleSpeed: 'normal', weather: 'sunny', particleDensity: 1 },
                     colorPalette: { grass: '#8B9D83', cabin: '#A67C52', sky: '#B8D4E8' },
